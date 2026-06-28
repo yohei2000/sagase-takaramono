@@ -6,7 +6,7 @@ export class World {
   readonly group = new THREE.Group();
   readonly colliders: Bounds[] = [];
   readonly interactables: Interactable[] = [];
-  readonly houseBounds: Bounds = { xMin: -12.65, xMax: 12.65, zMin: -9.65, zMax: 9.65 };
+  readonly houseBounds: Bounds = { xMin: -16.65, xMax: 16.65, zMin: -12.65, zMax: 12.65 };
   readonly playerStart: Vec2 = { x: -10.2, z: 7.2 };
   readonly cpuStart: Vec2 = { x: 8.8, z: -7.2 };
   readonly treasurePosition: Vec2 = { x: -12.1, z: -5.1 };
@@ -84,20 +84,22 @@ export class World {
   }
 
   private buildHouse(): void {
-    const floorMaterial = texturedMaterial('floor_wood', 0xf4cf8a, { repeat: [7, 6] });
-    const wallMaterial = texturedMaterial('wall_room', 0xfff0c6, { repeat: [4, 2] });
+    const floorMaterial = texturedMaterial('floor_wood', 0xf4cf8a, { repeat: [9, 7] });
+    const wallMaterial = texturedMaterial('wall_room', 0xfff0c6, { repeat: [5, 3] });
 
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(26, 0.12, 20), floorMaterial);
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(34, 0.12, 26), floorMaterial);
     floor.position.y = -0.08;
     floor.receiveShadow = true;
     this.group.add(floor);
 
     const roomTint = [
-      { x: -9.5, z: 5.5, w: 7, d: 8.5, color: 0xfff3d9 },
-      { x: 0, z: 5.5, w: 12, d: 8.5, color: 0xe8f8e1 },
-      { x: 9.5, z: 5.5, w: 7, d: 8.5, color: 0xe3f2ff },
-      { x: -6.5, z: -4.5, w: 13, d: 11, color: 0xffe9ef },
-      { x: 6.5, z: -4.5, w: 13, d: 11, color: 0xefe9ff }
+      { x: -12.25, z: 8, w: 8, d: 8.5, color: 0xfff3d9 },
+      { x: -3.75, z: 8, w: 9, d: 8.5, color: 0xe8f8e1 },
+      { x: 5.25, z: 8, w: 9, d: 8.5, color: 0xe3f2ff },
+      { x: 13.25, z: 8, w: 7, d: 8.5, color: 0xdff8ff },
+      { x: -11, z: -5, w: 11, d: 14.5, color: 0xffe9ef },
+      { x: 0, z: -5, w: 11, d: 14.5, color: 0xeaf9ed },
+      { x: 11, z: -5, w: 11, d: 14.5, color: 0xefe9ff }
     ];
 
     for (const room of roomTint) {
@@ -110,25 +112,31 @@ export class World {
       this.group.add(mesh);
     }
 
-    this.addWall(0, 10.1, 26.4, 0.32, wallMaterial, 'そとのかべ');
-    this.addWall(0, -10.1, 26.4, 0.32, wallMaterial, 'そとのかべ');
-    this.addWall(-13.1, 0, 0.32, 20.4, wallMaterial, 'そとのかべ');
-    this.addWall(13.1, 0, 0.32, 20.4, wallMaterial, 'そとのかべ');
+    this.addWall(0, 13.1, 34.4, 0.32, wallMaterial, 'そとのかべ');
+    this.addWall(0, -13.1, 34.4, 0.32, wallMaterial, 'そとのかべ');
+    this.addWall(-17.1, 0, 0.32, 26.4, wallMaterial, 'そとのかべ');
+    this.addWall(17.1, 0, 0.32, 26.4, wallMaterial, 'そとのかべ');
 
-    this.addWall(-7.5, 1, 11, 0.24, wallMaterial, 'へやのかべ');
-    this.addWall(7.5, 1, 11, 0.24, wallMaterial, 'へやのかべ');
+    this.addWall(-11.4, 2.55, 10.6, 0.24, wallMaterial, 'へやのかべ');
+    this.addWall(11.4, 2.55, 10.6, 0.24, wallMaterial, 'へやのかべ');
     this.addWall(-6, 2.3, 0.24, 2.6, wallMaterial, 'へやのかべ');
-    this.addWall(-6, 8.1, 0.24, 3.8, wallMaterial, 'へやのかべ');
+    this.addWall(-6, 9.1, 0.24, 5.8, wallMaterial, 'へやのかべ');
     this.addWall(6, 2.3, 0.24, 2.6, wallMaterial, 'へやのかべ');
-    this.addWall(6, 8.1, 0.24, 3.8, wallMaterial, 'へやのかべ');
+    this.addWall(6, 9.1, 0.24, 5.8, wallMaterial, 'へやのかべ');
+    this.addWall(10.4, 9.1, 0.24, 5.8, wallMaterial, 'へやのかべ');
     this.addWall(0, -6.1, 0.24, 7.8, wallMaterial, 'へやのかべ');
-    this.addWall(0, 0.45, 0.24, 1.1, wallMaterial, 'へやのかべ');
+    this.addWall(0, 2.05, 0.24, 1.2, wallMaterial, 'へやのかべ');
+    this.addWall(-5.5, -9.5, 0.24, 5.4, wallMaterial, 'へやのかべ');
+    this.addWall(5.5, -9.5, 0.24, 5.4, wallMaterial, 'へやのかべ');
 
-    this.addRoomLabel('げんかん', -9.5, 8.1, '#fff4c6');
-    this.addRoomLabel('リビング', 0, 8.2, '#dff7d4');
-    this.addRoomLabel('キッチン', 9.2, 8.2, '#d9f0ff');
+    this.addRoomLabel('げんかん', -12.2, 10.3, '#fff4c6');
+    this.addRoomLabel('リビング', -2.6, 10.4, '#dff7d4');
+    this.addRoomLabel('キッチン', 5.5, 10.4, '#d9f0ff');
+    this.addRoomLabel('おふろ', 13.3, 10.4, '#d9f8ff');
     this.addRoomLabel('こどもべや', -6.5, -8.3, '#ffe1ec');
-    this.addRoomLabel('ねしつ', 6.5, -8.4, '#ede4ff');
+    this.addRoomLabel('あそびべや', 0, -8.4, '#e2f9d7');
+    this.addRoomLabel('ねしつ', 8.5, -8.4, '#ede4ff');
+    this.addRoomLabel('そうこ', 0, -11.8, '#fff0c6');
   }
 
   private buildFurniture(): void {
@@ -149,6 +157,15 @@ export class World {
     this.addBox('あかいほんだな', -11.8, -5.1, 0.8, 3.25, 2.25, shelf);
     this.addBox('れいぞうこ', 10.65, 7.55, 1.25, 1.05, 2.15, new THREE.MeshStandardMaterial({ color: 0xe7fbff, roughness: 0.55 }));
     this.addBox('キッチンだい', 8.65, 3.05, 4.2, 1.12, 1.02, kitchen);
+    this.addBox('くつばこ', -15.1, 10.6, 1.7, 0.7, 0.92, wood);
+    this.addBox('おもちゃばこ', -13.9, -1.2, 1.5, 1.15, 0.72, new THREE.MeshStandardMaterial({ color: 0xffcf4d, roughness: 0.72 }));
+    this.addBox('まるいクッション', -1.4, -7.7, 1.4, 1.4, 0.36, new THREE.MeshStandardMaterial({ color: 0x9be8cf, roughness: 0.8 }), false);
+    this.addBox('つみきテーブル', 2.2, -4.4, 2.0, 1.2, 0.58, wood);
+    this.addBox('バスタブ', 14.1, 5.25, 2.2, 1.15, 0.68, new THREE.MeshStandardMaterial({ color: 0xd8f8ff, roughness: 0.5 }));
+    this.addBox('せんめんだい', 15.2, 8.25, 1.0, 1.3, 0.92, kitchen);
+    this.addBox('そうこのはこA', -2.2, -11.25, 1.45, 1.2, 0.85, new THREE.MeshStandardMaterial({ color: 0xd7a562, roughness: 0.74 }));
+    this.addBox('そうこのはこB', 2.15, -11.05, 1.35, 1.05, 0.76, new THREE.MeshStandardMaterial({ color: 0xc98b52, roughness: 0.78 }));
+    this.addBox('ナイトテーブル', 13.4, -7.9, 1.0, 1.0, 0.62, wood);
 
     const rugMesh = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.05, 48), rug);
     rugMesh.position.set(-0.3, 0.025, 5.5);
@@ -156,6 +173,8 @@ export class World {
     this.group.add(rugMesh);
 
     this.addPlant(4.7, 3.3);
+    this.addPlant(-14.5, -9.35);
+    this.addPlant(13.8, -10.2);
     this.addTreasureChest();
   }
 
@@ -181,6 +200,11 @@ export class World {
     this.addMiniSpot('mini-genkan', { x: -10.7, z: 8.55 }, 'count', 'かず');
     this.addMiniSpot('mini-bedroom', { x: 4.65, z: -8.45 }, 'match', 'おなじ え');
     this.addMiniSpot('mini-desk', { x: -6.25, z: -8.55 }, 'timing', 'きらきら');
+    this.addMiniSpot('mini-order-playroom', { x: -13.95, z: -3.15 }, 'order', 'じゅんばん');
+    this.addMiniSpot('mini-color-bath', { x: 13.55, z: 6.8 }, 'color', 'いろ');
+    this.addMiniSpot('mini-memory-storage', { x: 0.2, z: -10.95 }, 'memory', 'おぼえる');
+    this.addMiniSpot('mini-find-bedroom', { x: 12.9, z: -9.45 }, 'find', 'さがす');
+    this.addMiniSpot('mini-addition-entry', { x: -14.3, z: 8.35 }, 'addition', 'たしざん');
 
     this.interactables.push({
       id: 'treasure-bookshelf',

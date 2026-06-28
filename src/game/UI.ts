@@ -187,16 +187,18 @@ export class UI {
 
     context.strokeStyle = 'rgba(67, 97, 106, 0.38)';
     context.lineWidth = 2;
-    const roomZ = mapZ(1);
+    const roomZ = mapZ(2.5);
     context.beginPath();
     context.moveTo(9, roomZ);
     context.lineTo(width - 9, roomZ);
-    context.moveTo(mapX(-6), roomZ);
-    context.lineTo(mapX(-6), 9);
-    context.moveTo(mapX(6), roomZ);
-    context.lineTo(mapX(6), 9);
-    context.moveTo(mapX(0), roomZ);
-    context.lineTo(mapX(0), height - 9);
+    for (const x of [-10.4, -6, 0, 6, 10.4]) {
+      context.moveTo(mapX(x), 9);
+      context.lineTo(mapX(x), height - 9);
+    }
+    context.moveTo(mapX(-5.5), mapZ(-6.8));
+    context.lineTo(mapX(-5.5), height - 9);
+    context.moveTo(mapX(5.5), mapZ(-6.8));
+    context.lineTo(mapX(5.5), height - 9);
     context.stroke();
 
     drawDot(context, mapX(cpu.x), mapZ(cpu.z), '#4aa8ff', 'C');

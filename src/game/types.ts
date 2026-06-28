@@ -13,7 +13,7 @@ export type Bounds = {
   label?: string;
 };
 
-export type MiniGameKind = 'match' | 'timing' | 'count';
+export type MiniGameKind = 'match' | 'timing' | 'count' | 'order' | 'color' | 'memory' | 'find' | 'addition';
 
 export type InteractableType = 'hint' | 'minigame' | 'treasure';
 

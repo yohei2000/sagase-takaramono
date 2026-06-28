@@ -122,7 +122,10 @@ export class CPU {
     }
 
     this.setState('wander', events);
-    this.setPathTo({ x: -10 + Math.random() * 20, z: -7 + Math.random() * 14 });
+    this.setPathTo({
+      x: context.houseBounds.xMin + 2 + Math.random() * (context.houseBounds.xMax - context.houseBounds.xMin - 4),
+      z: context.houseBounds.zMin + 2 + Math.random() * (context.houseBounds.zMax - context.houseBounds.zMin - 4)
+    });
   }
 
   private moveAlongPath(dt: number, context: CPUContext, events: CPUEvent[]): void {
