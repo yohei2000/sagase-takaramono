@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>さがせ！たからものを！</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game-canvas" aria-label="3D game screen"></canvas>
+
+      <section id="hud" class="hud is-hidden" aria-live="polite">
+        <div class="topbar">
+          <div class="brand">さがせ！たからものを！</div>
+          <div class="meter coin-meter">コイン: <span id="coin-count">00</span> / 60</div>
+          <div class="meter cpu-meter">CPU: <span id="cpu-coin-count">00</span><span id="cpu-status" class="cpu-status">さがす</span></div>
+          <div class="meter hint-meter">ヒント: <span id="hint-left">6</span></div>
+        </div>
+
+        <aside class="hint-panel" aria-label="もらったヒント">
+          <h2>もらったヒント</h2>
+          <ul id="hint-list"></ul>
+        </aside>
+
+        <div id="interact-prompt" class="interact-prompt is-hidden">Eで しらべる</div>
+        <canvas id="mini-map" class="mini-map" width="190" height="150" aria-label="いえのマップ"></canvas>
+        <div id="toast" class="toast is-hidden"></div>
+        <div id="mobile-controls" class="mobile-controls" aria-label="スマホ操作">
+          <div class="mobile-dpad" aria-label="いどう">
+            <button class="mobile-control mobile-up" data-mobile-move="forward" aria-label="うえへ あるく">▲</button>
+            <button class="mobile-control mobile-left" data-mobile-move="left" aria-label="ひだりへ あるく">◀</button>
+            <button class="mobile-control mobile-down" data-mobile-move="back" aria-label="したへ あるく">▼</button>
+            <button class="mobile-control mobile-right" data-mobile-move="right" aria-label="みぎへ あるく">▶</button>
+          </div>
+          <button id="mobile-interact-button" class="mobile-interact-button" disabled>しらべる</button>
+        </div>
+      </section>
+
+      <section id="start-screen" class="screen">
+        <div class="screen-panel">
+          <p class="screen-kicker">3D たからさがし</p>
+          <h1>さがせ！<br />たからものを！</h1>
+          <button id="start-button" class="primary-button">はじめる</button>
+          <button id="howto-button" class="secondary-button">あそびかた</button>
+          <div id="howto-text" class="howto is-hidden">
+            <p>いえの なかを あるこう</p>
+            <p>ヒントを あつめよう</p>
+            <p>ゲームで コインを 60まい あつめよう</p>
+            <p>たからを みつけて あけよう</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="end-screen" class="screen is-hidden">
+        <div class="screen-panel">
+          <p id="end-kicker" class="screen-kicker">クリア！</p>
+          <h2 id="end-title">たからものを あけたよ！</h2>
+          <p id="end-message">きらきらの たからものを みつけたね。</p>
+          <button id="retry-button" class="primary-button">もういちど</button>
+        </div>
+      </section>
+
+      <section id="mini-game-root" class="mini-game-root is-hidden" aria-modal="true"></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

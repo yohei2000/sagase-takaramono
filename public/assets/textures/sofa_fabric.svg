@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#8cc8f5"/>
+  <path d="M-80 0 C 20 140, -40 320, 72 512" stroke="#d8f3ff" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M-35 0 C 65 140, 5 320, 117 512" stroke="#5aa9df" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M10 0 C 110 140, 50 320, 162 512" stroke="#d8f3ff" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M55 0 C 155 140, 95 320, 207 512" stroke="#5aa9df" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M100 0 C 200 140, 140 320, 252 512" stroke="#d8f3ff" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M145 0 C 245 140, 185 320, 297 512" stroke="#5aa9df" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M190 0 C 290 140, 230 320, 342 512" stroke="#d8f3ff" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M235 0 C 335 140, 275 320, 387 512" stroke="#5aa9df" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M280 0 C 380 140, 320 320, 432 512" stroke="#d8f3ff" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M325 0 C 425 140, 365 320, 477 512" stroke="#5aa9df" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M370 0 C 470 140, 410 320, 522 512" stroke="#d8f3ff" stroke-width="24" fill="none" opacity="0.34"/>
+  <path d="M415 0 C 515 140, 455 320, 567 512" stroke="#5aa9df" stroke-width="24" fill="none" opacity="0.34"/>
+</svg>
