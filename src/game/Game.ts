@@ -36,6 +36,7 @@ export class Game {
   private scene = new THREE.Scene();
   private stage: StageDefinition = STAGES[0];
   private progress: StageProgress = this.loadProgress();
+  private readonly devMode = this.isDeveloperMode();
   private world!: World;
   private player!: Player;
   private cpu!: CPU;
@@ -74,6 +75,7 @@ export class Game {
     });
     this.ui.onMobileInteract(() => this.tryInteract());
     this.bindInput(canvas);
+    this.applyDeveloperUnlockFromUrl();
     this.createScene();
     this.resize();
     this.showStageSelect();
@@ -431,7 +433,7 @@ export class Game {
     this.mode = 'menu';
     this.keys.clear();
     this.touchInput = { forward: false, back: false, left: false, right: false };
-    this.ui.showStageSelect(this.stageSelectItems());
+    this.ui.showStageSelect(this.stageSelectItems(), this.devMode ? this.developerUnlockUrl() : null);
   }
 
   private stageSelectItems(): StageSelectItem[] {
@@ -460,6 +462,42 @@ export class Game {
     }
 
     this.saveProgress();
+  }
+
+  private applyDeveloperUnlockFromUrl(): void {
+    if (!this.devMode) {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('unlockAllStages')) {
+      return;
+    }
+
+    this.unlockAllStages();
+    url.searchParams.delete('unlockAllStages');
+    url.searchParams.set('dev', '1');
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    this.ui.showToast('開発者モード: すべてのステージを解放しました', 3200);
+  }
+
+  private unlockAllStages(): void {
+    this.progress = {
+      highestUnlockedStage: STAGES[STAGES.length - 1].id,
+      clearedStages: STAGES.map((stage) => stage.id)
+    };
+    this.saveProgress();
+  }
+
+  private developerUnlockUrl(): string {
+    const url = new URL(window.location.href);
+    url.searchParams.set('dev', '1');
+    url.searchParams.set('unlockAllStages', '1');
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
+  private isDeveloperMode(): boolean {
+    return import.meta.env.DEV || new URL(window.location.href).searchParams.has('dev');
   }
 
   private loadProgress(): StageProgress {

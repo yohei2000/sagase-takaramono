@@ -502,6 +502,23 @@ h1,
   color: #5f7177;
 }
 
+.dev-tools {
+  margin: 6px auto 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.dev-link {
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: #24333a;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 .howto {
   margin: 18px auto 0;
   width: min(440px, 100%);
@@ -995,6 +1012,16 @@ h1,
     min-width: 56px;
     padding: 2px 6px;
     font-size: 11px;
+  }
+
+  .dev-tools {
+    margin: 4px auto 6px;
+  }
+
+  .dev-link {
+    min-height: 34px;
+    padding: 7px 12px;
+    font-size: 12px;
   }
 
   .mini-card h2 {

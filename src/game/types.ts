@@ -72,6 +72,9 @@ export type StageArea = {
   width: number;
   depth: number;
   color: number;
+  texture?: string;
+  repeat?: [number, number];
+  opacity?: number;
 };
 
 export type StageWall = {
@@ -133,6 +136,8 @@ export type StageDefinition = {
   treasurePromptHints: number;
   treasureClue: string;
   floorColor: number;
+  floorTexture?: string;
+  floorRepeat?: [number, number];
   wallColor: number;
   skyColor: number;
   fogNear: number;

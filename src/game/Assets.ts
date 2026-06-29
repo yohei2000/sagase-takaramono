@@ -9,6 +9,17 @@ type TextureOptions = {
 
 const loader = new THREE.TextureLoader();
 const textureBaseUrl = `${import.meta.env.BASE_URL}assets/textures/`;
+const svgFirstTextures = new Set([
+  'school_classroom_floor',
+  'school_hall_floor',
+  'school_yard_floor',
+  'park_grass_floor',
+  'park_sand_floor',
+  'library_floor',
+  'library_carpet_floor',
+  'street_floor',
+  'shop_floor'
+]);
 
 function applyTextureOptions(texture: THREE.Texture, options: TextureOptions): void {
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -23,9 +34,11 @@ function applyTextureOptions(texture: THREE.Texture, options: TextureOptions): v
 function loadTexture(name: string, options: TextureOptions, onLoad: (texture: THREE.Texture) => void): void {
   const pngPath = `${textureBaseUrl}${name}.png`;
   const svgPath = `${textureBaseUrl}${name}.svg`;
+  const primaryPath = svgFirstTextures.has(name) ? svgPath : pngPath;
+  const fallbackPath = svgFirstTextures.has(name) ? pngPath : svgPath;
 
   loader.load(
-    pngPath,
+    primaryPath,
     (texture) => {
       applyTextureOptions(texture, options);
       onLoad(texture);
@@ -33,7 +46,7 @@ function loadTexture(name: string, options: TextureOptions, onLoad: (texture: TH
     undefined,
     () => {
       loader.load(
-        svgPath,
+        fallbackPath,
         (texture) => {
           applyTextureOptions(texture, options);
           onLoad(texture);

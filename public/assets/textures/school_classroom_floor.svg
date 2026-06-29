@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#f2cf86"/>
+  <g stroke="#c9964e" stroke-width="3" opacity="0.7">
+    <path d="M0 32H256M0 64H256M0 96H256M0 128H256M0 160H256M0 192H256M0 224H256"/>
+  </g>
+  <g stroke="#b98542" stroke-width="2" opacity="0.55">
+    <path d="M34 0V32M112 32V64M188 64V96M72 96V128M150 128V160M224 160V192M44 192V224M126 224V256"/>
+  </g>
+  <g fill="#fff1bf" opacity="0.35">
+    <rect x="12" y="8" width="54" height="10" rx="3"/>
+    <rect x="132" y="74" width="68" height="10" rx="3"/>
+    <rect x="38" y="148" width="78" height="10" rx="3"/>
+    <rect x="164" y="210" width="58" height="10" rx="3"/>
+  </g>
+</svg>

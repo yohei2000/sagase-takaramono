@@ -5,6 +5,8 @@ export class UI {
   private readonly startScreen = requireElement<HTMLElement>('start-screen');
   private readonly endScreen = requireElement<HTMLElement>('end-screen');
   private readonly stageSelectGrid = requireElement<HTMLElement>('stage-select-grid');
+  private readonly devTools = requireElement<HTMLElement>('dev-tools');
+  private readonly unlockAllLink = requireElement<HTMLAnchorElement>('unlock-all-link');
   private readonly howtoButton = requireElement<HTMLButtonElement>('howto-button');
   private readonly retryButton = requireElement<HTMLButtonElement>('retry-button');
   private readonly nextStageButton = requireElement<HTMLButtonElement>('next-stage-button');
@@ -119,10 +121,11 @@ export class UI {
     this.hud.classList.remove('is-hidden');
   }
 
-  showStageSelect(stages: StageSelectItem[]): void {
+  showStageSelect(stages: StageSelectItem[], devUnlockUrl: string | null = null): void {
     this.hud.classList.add('is-hidden');
     this.endScreen.classList.add('is-hidden');
     this.startScreen.classList.remove('is-hidden');
+    this.renderDevTools(devUnlockUrl);
     this.renderStageCards(stages);
   }
 
@@ -164,6 +167,16 @@ export class UI {
       });
       this.stageSelectGrid.append(button);
     }
+  }
+
+  private renderDevTools(devUnlockUrl: string | null): void {
+    if (!devUnlockUrl) {
+      this.devTools.classList.add('is-hidden');
+      return;
+    }
+
+    this.unlockAllLink.href = devUnlockUrl;
+    this.devTools.classList.remove('is-hidden');
   }
 
   updateHud(state: HudState): void {

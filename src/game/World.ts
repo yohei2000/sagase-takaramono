@@ -180,7 +180,9 @@ export class World {
     const depth = stage.bounds.zMax - stage.bounds.zMin;
     const centerX = (stage.bounds.xMin + stage.bounds.xMax) / 2;
     const centerZ = (stage.bounds.zMin + stage.bounds.zMax) / 2;
-    const floorMaterial = texturedMaterial('floor_wood', stage.floorColor, { repeat: [10, 8] });
+    const floorMaterial = texturedMaterial(stage.floorTexture ?? 'floor_wood', stage.floorColor, {
+      repeat: stage.floorRepeat ?? [10, 8]
+    });
     const wallMaterial = new THREE.MeshStandardMaterial({ color: stage.wallColor, roughness: 0.72 });
 
     const floor = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, depth), floorMaterial);
@@ -189,12 +191,22 @@ export class World {
     this.group.add(floor);
 
     for (const area of stage.areas ?? []) {
-      const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(area.width, area.depth),
-        new THREE.MeshBasicMaterial({ color: area.color, transparent: true, opacity: 0.38, side: THREE.DoubleSide })
-      );
+      const areaOpacity = area.opacity ?? (area.texture ? 0.96 : 0.38);
+      const areaMaterial = area.texture
+        ? texturedMaterial(area.texture, area.color, {
+            repeat: area.repeat ?? [2, 2],
+            transparent: areaOpacity < 1,
+            roughness: 0.86
+          })
+        : new THREE.MeshBasicMaterial({ color: area.color, transparent: true, opacity: areaOpacity });
+      areaMaterial.side = THREE.DoubleSide;
+      areaMaterial.opacity = areaOpacity;
+      areaMaterial.transparent = areaOpacity < 1;
+
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(area.width, area.depth), areaMaterial);
       mesh.rotation.x = -Math.PI / 2;
       mesh.position.set(area.x, 0.006, area.z);
+      mesh.receiveShadow = true;
       this.group.add(mesh);
     }
 
