@@ -78,13 +78,6 @@ const assets = [
       'friendly rival child explorer outfit texture, cheerful, non-realistic, storybook game style, no text',
     palette: ['#7dc7ff', '#ffcf4d', '#ffffff'],
     kind: 'outfit'
-  },
-  {
-    name: 'player_character',
-    prompt:
-      'cute original low-poly pixel-style girl player character with black twin pigtails, red hair clips, yellow shirt, white skirt, cheerful child-friendly treasure hunt game style, no text',
-    palette: ['#f3e26f', '#302832', '#fff6f0'],
-    kind: 'playerGirl'
   }
 ];
 
@@ -169,7 +162,7 @@ async function writeFallbackSvg(asset) {
   const [a, b, c] = asset.palette;
   const svgPath = path.join(textureDir, `${asset.name}.svg`);
   const body = svgBody(asset.kind, a, b, c);
-  const background = asset.kind === 'playerGirl' ? '' : `  <rect width="512" height="512" fill="${a}"/>
+  const background = `  <rect width="512" height="512" fill="${a}"/>
 `;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
 ${background}  ${body}
@@ -241,32 +234,6 @@ function svgBody(kind, a, b, c) {
     return `<circle cx="256" cy="256" r="196" fill="${b}"/>
   <circle cx="256" cy="256" r="156" fill="${a}"/>
   <polygon points="256,118 294,210 394,218 318,282 342,382 256,328 170,382 194,282 118,218 218,210" fill="${c}" opacity="0.85"/>`;
-  }
-  if (kind === 'playerGirl') {
-    return `<rect x="190" y="222" width="132" height="112" rx="16" fill="${a}"/>
-  <rect x="176" y="324" width="160" height="54" rx="8" fill="${c}"/>
-  <rect x="206" y="374" width="30" height="92" rx="6" fill="#272632"/>
-  <rect x="276" y="374" width="30" height="92" rx="6" fill="#272632"/>
-  <rect x="124" y="242" width="68" height="26" rx="8" fill="${c}"/>
-  <rect x="320" y="242" width="68" height="26" rx="8" fill="${c}"/>
-  <rect x="104" y="248" width="28" height="28" rx="6" fill="#ffdcc9"/>
-  <rect x="380" y="248" width="28" height="28" rx="6" fill="#ffdcc9"/>
-  <rect x="157" y="96" width="198" height="142" rx="28" fill="#ffdcc9"/>
-  <rect x="148" y="78" width="216" height="72" rx="18" fill="${b}"/>
-  <rect x="142" y="128" width="42" height="112" rx="10" fill="${b}"/>
-  <rect x="328" y="128" width="42" height="112" rx="10" fill="${b}"/>
-  <rect x="114" y="106" width="54" height="62" rx="10" fill="${b}"/>
-  <rect x="80" y="156" width="60" height="64" rx="10" fill="${b}"/>
-  <rect x="108" y="212" width="48" height="58" rx="10" fill="${b}"/>
-  <rect x="344" y="106" width="54" height="62" rx="10" fill="${b}"/>
-  <rect x="372" y="156" width="60" height="64" rx="10" fill="${b}"/>
-  <rect x="356" y="212" width="48" height="58" rx="10" fill="${b}"/>
-  <rect x="210" y="158" width="24" height="50" rx="4" fill="#27232a"/>
-  <rect x="278" y="158" width="24" height="50" rx="4" fill="#27232a"/>
-  <rect x="184" y="210" width="32" height="16" rx="4" fill="#ff9a9e" opacity="0.86"/>
-  <rect x="296" y="210" width="32" height="16" rx="4" fill="#ff9a9e" opacity="0.86"/>
-  <rect x="176" y="92" width="34" height="38" rx="6" fill="#f05d67"/>
-  <rect x="302" y="92" width="34" height="38" rx="6" fill="#f05d67"/>`;
   }
   if (kind === 'outfit') {
     return `<rect x="86" y="70" width="340" height="372" rx="46" fill="${a}"/>
