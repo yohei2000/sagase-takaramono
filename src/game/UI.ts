@@ -1,14 +1,18 @@
-import type { Bounds, HudState, InputState, Vec2 } from './types';
+import type { Bounds, HudState, InputState, StageDefinition, StageId, StageSelectItem, Vec2 } from './types';
 
 export class UI {
   private readonly hud = requireElement<HTMLElement>('hud');
   private readonly startScreen = requireElement<HTMLElement>('start-screen');
   private readonly endScreen = requireElement<HTMLElement>('end-screen');
-  private readonly startButton = requireElement<HTMLButtonElement>('start-button');
+  private readonly stageSelectGrid = requireElement<HTMLElement>('stage-select-grid');
   private readonly howtoButton = requireElement<HTMLButtonElement>('howto-button');
   private readonly retryButton = requireElement<HTMLButtonElement>('retry-button');
+  private readonly nextStageButton = requireElement<HTMLButtonElement>('next-stage-button');
+  private readonly stageSelectButton = requireElement<HTMLButtonElement>('stage-select-button');
   private readonly howtoText = requireElement<HTMLElement>('howto-text');
+  private readonly stageTitle = requireElement<HTMLElement>('stage-title');
   private readonly coinCount = requireElement<HTMLElement>('coin-count');
+  private readonly coinGoal = requireElement<HTMLElement>('coin-goal');
   private readonly cpuCoinCount = requireElement<HTMLElement>('cpu-coin-count');
   private readonly cpuStatus = requireElement<HTMLElement>('cpu-status');
   private readonly hintLeft = requireElement<HTMLElement>('hint-left');
@@ -21,14 +25,23 @@ export class UI {
   private readonly endKicker = requireElement<HTMLElement>('end-kicker');
   private readonly endTitle = requireElement<HTMLElement>('end-title');
   private readonly endMessage = requireElement<HTMLElement>('end-message');
+  private stageSelectCallback: ((stageId: StageId) => void) | null = null;
   private toastTimer = 0;
 
-  onStart(callback: () => void): void {
-    this.startButton.addEventListener('click', callback);
+  onStageSelect(callback: (stageId: StageId) => void): void {
+    this.stageSelectCallback = callback;
   }
 
   onRetry(callback: () => void): void {
     this.retryButton.addEventListener('click', callback);
+  }
+
+  onNextStage(callback: () => void): void {
+    this.nextStageButton.addEventListener('click', callback);
+  }
+
+  onStageSelectButton(callback: () => void): void {
+    this.stageSelectButton.addEventListener('click', callback);
   }
 
   onMobileMoveChange(callback: (input: InputState) => void): void {
@@ -106,22 +119,57 @@ export class UI {
     this.hud.classList.remove('is-hidden');
   }
 
-  showEnd(kind: 'win' | 'lose'): void {
+  showStageSelect(stages: StageSelectItem[]): void {
+    this.hud.classList.add('is-hidden');
+    this.endScreen.classList.add('is-hidden');
+    this.startScreen.classList.remove('is-hidden');
+    this.renderStageCards(stages);
+  }
+
+  showEnd(kind: 'win' | 'lose', stage: StageDefinition, nextStageId: StageId | null): void {
     this.hud.classList.add('is-hidden');
     this.endScreen.classList.remove('is-hidden');
     if (kind === 'win') {
       this.endKicker.textContent = 'クリア！';
-      this.endTitle.textContent = 'たからものを あけたよ！';
-      this.endMessage.textContent = 'きらきらの たからものを みつけたね。';
+      this.endTitle.textContent = `${stage.shortTitle}を クリア！`;
+      this.endMessage.textContent = nextStageId
+        ? `ステージ${nextStageId}が あそべるように なったよ。`
+        : 'ぜんぶの たからものを みつけたね。';
+      this.nextStageButton.classList.toggle('is-hidden', nextStageId === null);
     } else {
       this.endKicker.textContent = 'もういちど ちょうせん！';
       this.endTitle.textContent = 'CPUが さきに あけたよ';
       this.endMessage.textContent = 'つぎは ヒントと コインを もっと はやく あつめよう。';
+      this.nextStageButton.classList.add('is-hidden');
+    }
+  }
+
+  private renderStageCards(stages: StageSelectItem[]): void {
+    this.stageSelectGrid.innerHTML = '';
+    for (const stage of stages) {
+      const button = document.createElement('button');
+      button.className = 'stage-card';
+      button.classList.toggle('is-locked', !stage.unlocked);
+      button.disabled = !stage.unlocked;
+      button.innerHTML = `
+        <span class="stage-card-status">${stage.cleared ? 'クリア' : stage.unlocked ? 'あそべる' : 'ロック'}</span>
+        <strong>${stage.title}</strong>
+        <span>${stage.subtitle}</span>
+        <small>${stage.unlocked ? stage.description : 'まえの ステージを クリアしよう'}</small>
+      `;
+      button.addEventListener('click', () => {
+        if (stage.unlocked) {
+          this.stageSelectCallback?.(stage.id);
+        }
+      });
+      this.stageSelectGrid.append(button);
     }
   }
 
   updateHud(state: HudState): void {
+    this.stageTitle.textContent = state.stageTitle;
     this.coinCount.textContent = state.coins.toString().padStart(2, '0');
+    this.coinGoal.textContent = state.coinGoal.toString();
     this.cpuCoinCount.textContent = state.cpuCoins.toString().padStart(2, '0');
     this.hintLeft.textContent = Math.max(0, state.hintsTotal - state.hints.length).toString();
     this.hintList.innerHTML = '';
@@ -185,20 +233,17 @@ export class UI {
     context.lineWidth = 3;
     context.strokeRect(9, 9, width - 18, height - 18);
 
-    context.strokeStyle = 'rgba(67, 97, 106, 0.38)';
-    context.lineWidth = 2;
-    const roomZ = mapZ(2.5);
+    context.strokeStyle = 'rgba(67, 97, 106, 0.28)';
+    context.lineWidth = 1.5;
     context.beginPath();
-    context.moveTo(9, roomZ);
-    context.lineTo(width - 9, roomZ);
-    for (const x of [-10.4, -6, 0, 6, 10.4]) {
-      context.moveTo(mapX(x), 9);
-      context.lineTo(mapX(x), height - 9);
+    for (let i = 1; i <= 3; i += 1) {
+      const x = 9 + ((width - 18) / 4) * i;
+      const y = 9 + ((height - 18) / 4) * i;
+      context.moveTo(x, 9);
+      context.lineTo(x, height - 9);
+      context.moveTo(9, y);
+      context.lineTo(width - 9, y);
     }
-    context.moveTo(mapX(-5.5), mapZ(-6.8));
-    context.lineTo(mapX(-5.5), height - 9);
-    context.moveTo(mapX(5.5), mapZ(-6.8));
-    context.lineTo(mapX(5.5), height - 9);
     context.stroke();
 
     drawDot(context, mapX(cpu.x), mapZ(cpu.z), '#4aa8ff', 'C');

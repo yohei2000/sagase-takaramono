@@ -1,29 +1,40 @@
 import * as THREE from 'three';
 import { iconMaterial, makeTextSprite, texturedMaterial } from './Assets';
-import type { Bounds, Interactable, MiniGameKind, Vec2 } from './types';
+import type { Bounds, Interactable, MiniGameKind, StageDefinition, StageProp, StageWall, Vec2 } from './types';
 
 export class World {
   readonly group = new THREE.Group();
   readonly colliders: Bounds[] = [];
   readonly interactables: Interactable[] = [];
-  readonly houseBounds: Bounds = { xMin: -16.65, xMax: 16.65, zMin: -12.65, zMax: 12.65 };
-  readonly playerStart: Vec2 = { x: -10.2, z: 7.2 };
-  readonly cpuStart: Vec2 = { x: 8.8, z: -7.2 };
-  readonly treasurePosition: Vec2 = { x: -12.1, z: -5.1 };
+  readonly stage: StageDefinition;
+  readonly houseBounds: Bounds;
+  readonly playerStart: Vec2;
+  readonly cpuStart: Vec2;
+  readonly treasurePosition: Vec2;
 
-  private treasureLid: THREE.Mesh | null = null;
+  private treasureLid: THREE.Group | null = null;
   private treasureGroup: THREE.Group | null = null;
   private treasureGlowGroup: THREE.Group | null = null;
   private treasureGlowLight: THREE.PointLight | null = null;
   private treasureGlowStrength = 0;
+  private treasureOpened = false;
   private focusedInteractableId: string | null = null;
   private animatedObjects: THREE.Object3D[] = [];
 
-  constructor(scene: THREE.Scene) {
-    this.group.name = 'house-world';
+  constructor(scene: THREE.Scene, stage: StageDefinition) {
+    this.stage = stage;
+    this.houseBounds = stage.bounds;
+    this.playerStart = { ...stage.playerStart };
+    this.cpuStart = { ...stage.cpuStart };
+    this.treasurePosition = { ...stage.treasurePosition };
+    this.group.name = `stage-${stage.id}-world`;
     scene.add(this.group);
-    this.buildHouse();
-    this.buildFurniture();
+    if (stage.id === 1) {
+      this.buildHouse();
+      this.buildFurniture();
+    } else {
+      this.buildConfiguredStage();
+    }
     this.buildInteractables();
   }
 
@@ -67,12 +78,17 @@ export class World {
   }
 
   openTreasure(): void {
+    this.treasureOpened = true;
+    if (this.treasureGroup) {
+      this.treasureGroup.visible = true;
+      this.treasureGroup.scale.setScalar(1);
+    }
     if (this.treasureLid) {
       this.treasureLid.rotation.x = -Math.PI * 0.42;
       this.treasureLid.position.y = 0.82;
       this.treasureLid.position.z = -0.18;
     }
-    this.setTreasureGlowLevel(6);
+    this.setTreasureGlowLevel(this.stage.hints.length);
   }
 
   setFocusedInteractable(id: string | null): void {
@@ -80,12 +96,31 @@ export class World {
   }
 
   setTreasureGlowLevel(hintsFound: number): void {
-    this.treasureGlowStrength = THREE.MathUtils.clamp(hintsFound / 6, 0, 1);
+    const totalHints = Math.max(1, this.stage.hints.length);
+    const revealWindow = Math.max(1, totalHints - this.stage.treasureRevealHints + 1);
+    this.treasureGlowStrength = THREE.MathUtils.clamp(
+      (hintsFound - this.stage.treasureRevealHints + 1) / revealWindow,
+      0,
+      1
+    );
+    if (this.treasureGroup) {
+      const visible = this.treasureOpened || hintsFound >= this.stage.treasureRevealHints;
+      this.treasureGroup.visible = visible;
+      this.treasureGroup.scale.setScalar(visible ? THREE.MathUtils.lerp(0.72, 1, this.treasureGlowStrength) : 0.62);
+    }
+  }
+
+  treasureSearchRadius(hintsFound: number): number {
+    if (hintsFound < this.stage.treasurePromptHints) {
+      return 0.55;
+    }
+    const progress = THREE.MathUtils.clamp(hintsFound / Math.max(1, this.stage.hints.length), 0, 1);
+    return THREE.MathUtils.lerp(0.95, 2.05, progress);
   }
 
   private buildHouse(): void {
-    const floorMaterial = texturedMaterial('floor_wood', 0xf4cf8a, { repeat: [9, 7] });
-    const wallMaterial = texturedMaterial('wall_room', 0xfff0c6, { repeat: [5, 3] });
+    const floorMaterial = texturedMaterial('floor_wood', 0xf4cf8a, { repeat: [4, 3] });
+    const wallMaterial = texturedMaterial('wall_room', 0xfff0c6, { repeat: [3, 2] });
 
     const floor = new THREE.Mesh(new THREE.BoxGeometry(34, 0.12, 26), floorMaterial);
     floor.position.y = -0.08;
@@ -139,6 +174,54 @@ export class World {
     this.addRoomLabel('そうこ', 0, -11.8, '#fff0c6');
   }
 
+  private buildConfiguredStage(): void {
+    const { stage } = this;
+    const width = stage.bounds.xMax - stage.bounds.xMin;
+    const depth = stage.bounds.zMax - stage.bounds.zMin;
+    const centerX = (stage.bounds.xMin + stage.bounds.xMax) / 2;
+    const centerZ = (stage.bounds.zMin + stage.bounds.zMax) / 2;
+    const floorMaterial = texturedMaterial('floor_wood', stage.floorColor, { repeat: [10, 8] });
+    const wallMaterial = new THREE.MeshStandardMaterial({ color: stage.wallColor, roughness: 0.72 });
+
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, depth), floorMaterial);
+    floor.position.set(centerX, -0.08, centerZ);
+    floor.receiveShadow = true;
+    this.group.add(floor);
+
+    for (const area of stage.areas ?? []) {
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(area.width, area.depth),
+        new THREE.MeshBasicMaterial({ color: area.color, transparent: true, opacity: 0.38, side: THREE.DoubleSide })
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(area.x, 0.006, area.z);
+      this.group.add(mesh);
+    }
+
+    this.addBox('そとのさく', centerX, stage.bounds.zMax + 0.15, width + 0.6, 0.3, stage.boundaryHeight, wallMaterial, true, stage.boundaryHeight / 2);
+    this.addBox('そとのさく', centerX, stage.bounds.zMin - 0.15, width + 0.6, 0.3, stage.boundaryHeight, wallMaterial, true, stage.boundaryHeight / 2);
+    this.addBox('そとのさく', stage.bounds.xMin - 0.15, centerZ, 0.3, depth + 0.6, stage.boundaryHeight, wallMaterial, true, stage.boundaryHeight / 2);
+    this.addBox('そとのさく', stage.bounds.xMax + 0.15, centerZ, 0.3, depth + 0.6, stage.boundaryHeight, wallMaterial, true, stage.boundaryHeight / 2);
+
+    for (const wall of stage.walls ?? []) {
+      this.addConfiguredWall(wall, wallMaterial);
+    }
+
+    for (const prop of stage.props ?? []) {
+      this.addConfiguredProp(prop);
+    }
+
+    for (const plant of stage.plants ?? []) {
+      this.addPlant(plant.x, plant.z);
+    }
+
+    for (const label of stage.labels ?? []) {
+      this.addRoomLabel(label.text, label.x, label.z, label.background);
+    }
+
+    this.addTreasureChest();
+  }
+
   private buildFurniture(): void {
     const sofa = texturedMaterial('sofa_fabric', 0x7dbff2);
     const rug = texturedMaterial('rug_playful', 0xffb45c);
@@ -167,6 +250,11 @@ export class World {
     this.addBox('そうこのはこB', 2.15, -11.05, 1.35, 1.05, 0.76, new THREE.MeshStandardMaterial({ color: 0xc98b52, roughness: 0.78 }));
     this.addBox('ナイトテーブル', 13.4, -7.9, 1.0, 1.0, 0.62, wood);
 
+    this.addSofaDetails(-3.1, 6.2, sofa);
+    this.addBedDetails(7.2, -7.15, blanket, wood);
+    this.addBookshelfDetails(-11.8, -5.1);
+    this.addKitchenDetails(8.65, 3.05);
+
     const rugMesh = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.35, 0.05, 48), rug);
     rugMesh.position.set(-0.3, 0.025, 5.5);
     rugMesh.receiveShadow = true;
@@ -179,42 +267,47 @@ export class World {
   }
 
   private buildInteractables(): void {
-    const hintTexts = [
-      'たからは こどもべやの ちかく',
-      'ほんが たくさん あるところ',
-      'うしろを しらべてみよう',
-      'あかい ほんだなの そば',
-      'かべの ちかくに かくれているよ',
-      'ちいさな はこの かたちが みえるかも'
-    ];
+    for (const hint of this.stage.hints) {
+      this.addHint(hint.id, hint.position, hint.text);
+    }
 
-    this.addHint('hint-genkan', { x: -9.5, z: 6.8 }, hintTexts[0]);
-    this.addHint('hint-living', { x: -0.6, z: 4.1 }, hintTexts[1]);
-    this.addHint('hint-kitchen', { x: 11.2, z: 4.7 }, hintTexts[2]);
-    this.addHint('hint-desk', { x: -3.5, z: -6.45 }, hintTexts[3]);
-    this.addHint('hint-bed', { x: 8.85, z: -8.45 }, hintTexts[4]);
-    this.addHint('hint-bookshelf', { x: -10.45, z: -3.1 }, hintTexts[5]);
-
-    this.addMiniSpot('mini-living', { x: 1.85, z: 6.3 }, 'match', 'おなじ え');
-    this.addMiniSpot('mini-kitchen', { x: 9.15, z: 4.45 }, 'timing', 'きらきら');
-    this.addMiniSpot('mini-genkan', { x: -10.7, z: 8.55 }, 'count', 'かず');
-    this.addMiniSpot('mini-bedroom', { x: 4.65, z: -8.45 }, 'match', 'おなじ え');
-    this.addMiniSpot('mini-desk', { x: -6.25, z: -8.55 }, 'timing', 'きらきら');
-    this.addMiniSpot('mini-order-playroom', { x: -13.95, z: -3.15 }, 'order', 'じゅんばん');
-    this.addMiniSpot('mini-color-bath', { x: 13.55, z: 6.8 }, 'color', 'いろ');
-    this.addMiniSpot('mini-memory-storage', { x: 0.2, z: -10.95 }, 'memory', 'おぼえる');
-    this.addMiniSpot('mini-find-bedroom', { x: 12.9, z: -9.45 }, 'find', 'さがす');
-    this.addMiniSpot('mini-addition-entry', { x: -14.3, z: 8.35 }, 'addition', 'たしざん');
+    for (const spot of this.stage.miniSpots) {
+      this.addMiniSpot(spot.id, spot.position, spot.kind, spot.label);
+    }
 
     this.interactables.push({
-      id: 'treasure-bookshelf',
+      id: `treasure-stage-${this.stage.id}`,
       type: 'treasure',
       position: this.treasurePosition,
-      radius: 1.75,
+      radius: 2.05,
       label: 'たからばこ',
       done: false,
       plays: 0
     });
+  }
+
+  private addConfiguredWall(wall: StageWall, fallbackMaterial: THREE.Material): void {
+    const material = wall.color
+      ? new THREE.MeshStandardMaterial({ color: wall.color, roughness: 0.72 })
+      : fallbackMaterial;
+    this.addBox(wall.label, wall.x, wall.z, wall.width, wall.depth, wall.height ?? 1.55, material, true, (wall.height ?? 1.55) / 2);
+  }
+
+  private addConfiguredProp(prop: StageProp): void {
+    const material = prop.texture
+      ? texturedMaterial(prop.texture, prop.color, { repeat: [2, 1] })
+      : new THREE.MeshStandardMaterial({ color: prop.color, roughness: 0.72 });
+    this.addBox(
+      prop.label,
+      prop.x,
+      prop.z,
+      prop.width,
+      prop.depth,
+      prop.height,
+      material,
+      prop.collider ?? true,
+      prop.y ?? prop.height / 2
+    );
   }
 
   private addWall(
@@ -259,6 +352,83 @@ export class World {
     return mesh;
   }
 
+  private addDetailBox(
+    label: string,
+    x: number,
+    z: number,
+    width: number,
+    depth: number,
+    height: number,
+    material: THREE.Material,
+    y = height / 2
+  ): THREE.Mesh {
+    return this.addBox(label, x, z, width, depth, height, material, false, y);
+  }
+
+  private addSofaDetails(x: number, z: number, fabric: THREE.Material): void {
+    const trim = new THREE.MeshStandardMaterial({ color: 0x4e95c7, roughness: 0.78 });
+    const pillowWarm = new THREE.MeshStandardMaterial({ color: 0xffef9d, roughness: 0.82 });
+    const pillowMint = new THREE.MeshStandardMaterial({ color: 0x9be8cf, roughness: 0.82 });
+
+    this.addDetailBox('sofa-left-arm', x - 1.58, z, 0.22, 1.28, 0.72, trim, 0.54);
+    this.addDetailBox('sofa-right-arm', x + 1.58, z, 0.22, 1.28, 0.72, trim, 0.54);
+    this.addDetailBox('sofa-seat-seam-left', x - 0.52, z - 0.03, 0.04, 1.06, 0.05, trim, 0.86);
+    this.addDetailBox('sofa-seat-seam-right', x + 0.52, z - 0.03, 0.04, 1.06, 0.05, trim, 0.86);
+    this.addDetailBox('sofa-pillow-left', x - 0.72, z + 0.52, 0.52, 0.14, 0.38, pillowWarm, 1.05);
+    this.addDetailBox('sofa-pillow-right', x + 0.72, z + 0.52, 0.52, 0.14, 0.38, pillowMint, 1.05);
+    this.addDetailBox('sofa-front-roll', x, z - 0.64, 2.72, 0.08, 0.18, fabric, 0.8);
+  }
+
+  private addBedDetails(x: number, z: number, blanket: THREE.Material, wood: THREE.Material): void {
+    const pillow = new THREE.MeshStandardMaterial({ color: 0xfffbef, roughness: 0.72 });
+    const rail = new THREE.MeshStandardMaterial({ color: 0x9b6b42, roughness: 0.7 });
+
+    this.addDetailBox('bed-headboard', x, z - 1.18, 3.72, 0.18, 0.78, rail, 0.58);
+    this.addDetailBox('bed-footboard', x, z + 1.12, 3.62, 0.14, 0.42, rail, 0.46);
+    this.addDetailBox('bed-pillow-left', x - 0.82, z - 0.72, 0.82, 0.48, 0.18, pillow, 0.86);
+    this.addDetailBox('bed-pillow-right', x + 0.82, z - 0.72, 0.82, 0.48, 0.18, pillow, 0.86);
+    this.addDetailBox('bed-blanket-fold', x, z + 0.35, 3.26, 0.12, 0.12, blanket, 0.84);
+    this.addDetailBox('bed-side-drawer', x + 2.08, z + 0.24, 0.52, 1.04, 0.24, wood, 0.32);
+  }
+
+  private addBookshelfDetails(x: number, z: number): void {
+    const frame = new THREE.MeshStandardMaterial({ color: 0xb83f38, roughness: 0.66 });
+    const shelfWood = new THREE.MeshStandardMaterial({ color: 0x7a2d26, roughness: 0.7 });
+    const colors = [0xffcf4d, 0x68c7e8, 0x9be8cf, 0xf36f72, 0x7c75d6, 0xff8d54];
+
+    this.addDetailBox('bookshelf-front-left-frame', x + 0.45, z - 1.52, 0.16, 0.12, 2.28, frame, 1.15);
+    this.addDetailBox('bookshelf-front-right-frame', x + 0.45, z + 1.52, 0.16, 0.12, 2.28, frame, 1.15);
+    for (const y of [0.55, 1.13, 1.72]) {
+      this.addDetailBox('bookshelf-shelf', x + 0.48, z, 0.14, 2.72, 0.08, shelfWood, y);
+    }
+
+    for (let row = 0; row < 3; row += 1) {
+      for (let i = 0; i < 7; i += 1) {
+        const bookHeight = 0.38 + ((row + i) % 3) * 0.08;
+        const book = new THREE.Mesh(
+          new THREE.BoxGeometry(0.16, bookHeight, 0.18),
+          new THREE.MeshStandardMaterial({ color: colors[(row * 3 + i) % colors.length], roughness: 0.76 })
+        );
+        book.position.set(x + 0.55, 0.38 + row * 0.58 + bookHeight / 2, z - 1.08 + i * 0.36);
+        book.castShadow = true;
+        book.receiveShadow = true;
+        this.group.add(book);
+      }
+    }
+  }
+
+  private addKitchenDetails(x: number, z: number): void {
+    const counterTop = new THREE.MeshStandardMaterial({ color: 0xfff6df, roughness: 0.48 });
+    const handle = new THREE.MeshStandardMaterial({ color: 0xd3a54b, metalness: 0.18, roughness: 0.42 });
+    const sink = new THREE.MeshStandardMaterial({ color: 0xbfe8ee, metalness: 0.08, roughness: 0.34 });
+
+    this.addDetailBox('kitchen-counter-top', x, z, 4.34, 1.2, 0.08, counterTop, 1.07);
+    this.addDetailBox('kitchen-sink', x - 1.25, z - 0.08, 0.82, 0.42, 0.05, sink, 1.13);
+    for (const offset of [-1.3, 0, 1.3]) {
+      this.addDetailBox('kitchen-handle', x + offset, z - 0.6, 0.52, 0.04, 0.06, handle, 0.7);
+    }
+  }
+
   private addPlant(x: number, z: number): void {
     const pot = new THREE.Mesh(
       new THREE.CylinderGeometry(0.34, 0.42, 0.5, 16),
@@ -279,22 +449,88 @@ export class World {
     this.colliders.push({ xMin: x - 0.55, xMax: x + 0.55, zMin: z - 0.55, zMax: z + 0.55, label: 'かんようしょくぶつ' });
   }
 
+  private createStarGeometry(outerRadius: number, innerRadius: number): THREE.ShapeGeometry {
+    const shape = new THREE.Shape();
+    for (let i = 0; i < 10; i += 1) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) {
+        shape.moveTo(x, y);
+      } else {
+        shape.lineTo(x, y);
+      }
+    }
+    shape.closePath();
+    return new THREE.ShapeGeometry(shape);
+  }
+
   private addTreasureChest(): void {
     const chestMaterial = texturedMaterial('treasure_chest', 0xffc93a, { metalness: 0.08, roughness: 0.48 });
+    const goldMaterial = new THREE.MeshStandardMaterial({ color: 0xffd65b, metalness: 0.28, roughness: 0.34 });
+    const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x3c291f, roughness: 0.72 });
+    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xfff3a1, side: THREE.DoubleSide });
     const group = new THREE.Group();
+    group.name = `${this.stage.shortTitle}の かくれた たから`;
     group.position.set(this.treasurePosition.x, 0.05, this.treasurePosition.z);
     group.rotation.y = Math.PI / 2;
+    group.visible = false;
 
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.5, 0.52), chestMaterial);
-    base.position.y = 0.28;
-    base.castShadow = true;
-    base.receiveShadow = true;
-    group.add(base);
+    const addPart = (
+      parent: THREE.Group,
+      geometry: THREE.BufferGeometry,
+      material: THREE.Material,
+      position: [number, number, number],
+      rotation?: [number, number, number]
+    ): THREE.Mesh => {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(position[0], position[1], position[2]);
+      if (rotation) {
+        mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
+      }
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      parent.add(mesh);
+      return mesh;
+    };
 
-    this.treasureLid = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.22, 0.56), chestMaterial);
-    this.treasureLid.position.y = 0.66;
-    this.treasureLid.castShadow = true;
-    group.add(this.treasureLid);
+    addPart(group, new THREE.BoxGeometry(0.96, 0.48, 0.58), chestMaterial, [0, 0.3, 0]);
+    addPart(group, new THREE.BoxGeometry(1.02, 0.08, 0.64), goldMaterial, [0, 0.55, 0]);
+    addPart(group, new THREE.BoxGeometry(1.02, 0.08, 0.64), goldMaterial, [0, 0.08, 0]);
+    addPart(group, new THREE.BoxGeometry(0.08, 0.56, 0.66), goldMaterial, [-0.38, 0.32, 0]);
+    addPart(group, new THREE.BoxGeometry(0.08, 0.56, 0.66), goldMaterial, [0.38, 0.32, 0]);
+
+    const lidGroup = new THREE.Group();
+    lidGroup.position.set(0, 0.62, 0);
+    addPart(lidGroup, new THREE.BoxGeometry(1.02, 0.22, 0.64), chestMaterial, [0, 0.01, 0]);
+    addPart(lidGroup, new THREE.BoxGeometry(0.9, 0.12, 0.54), chestMaterial, [0, 0.16, 0]);
+    addPart(lidGroup, new THREE.BoxGeometry(1.08, 0.08, 0.7), goldMaterial, [0, 0.26, 0]);
+    addPart(lidGroup, new THREE.BoxGeometry(0.08, 0.34, 0.72), goldMaterial, [-0.38, 0.1, 0]);
+    addPart(lidGroup, new THREE.BoxGeometry(0.08, 0.34, 0.72), goldMaterial, [0.38, 0.1, 0]);
+    group.add(lidGroup);
+
+    const lock = addPart(group, new THREE.BoxGeometry(0.24, 0.3, 0.05), goldMaterial, [0, 0.42, -0.33]);
+    lock.castShadow = true;
+    const keyHole = addPart(group, new THREE.BoxGeometry(0.06, 0.12, 0.055), darkMaterial, [0, 0.36, -0.365]);
+    keyHole.castShadow = false;
+    const star = addPart(
+      group,
+      this.createStarGeometry(0.085, 0.04),
+      starMaterial,
+      [0, 0.49, -0.368],
+      [0, Math.PI, 0]
+    );
+    star.castShadow = false;
+
+    const studGeometry = new THREE.SphereGeometry(0.045, 12, 8);
+    for (const sx of [-0.5, 0.5]) {
+      for (const sy of [0.14, 0.5, 0.72]) {
+        addPart(group, studGeometry, goldMaterial, [sx, sy, -0.32]);
+      }
+    }
+
+    this.treasureLid = lidGroup;
 
     const glow = new THREE.PointLight(0xffd75e, 0.45, 3);
     glow.position.set(0, 0.8, 0);

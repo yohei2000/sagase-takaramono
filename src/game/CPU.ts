@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { distance2, resolveMove } from './Collision';
-import { iconMaterial, makeTextSprite, texturedMaterial } from './Assets';
+import { makeTextSprite, spriteMaterial } from './Assets';
 import type { Bounds, CPUState, Interactable, Vec2 } from './types';
 
 export type CPUEvent =
@@ -15,6 +15,9 @@ type CPUContext = {
   colliders: Bounds[];
   houseBounds: Bounds;
   treasurePosition: Vec2;
+  coinGoal: number;
+  treasureDelay: number;
+  treasureHints: number;
 };
 
 export class CPU {
@@ -26,7 +29,7 @@ export class CPU {
   hints = 0;
   state: CPUState = 'wander';
 
-  private readonly speed = 2.1;
+  private readonly speed: number;
   private readonly visitedHints = new Set<string>();
   private readonly visitedGames = new Set<string>();
   private path: Vec2[] = [];
@@ -36,15 +39,18 @@ export class CPU {
   private stuckTimer = 0;
   private readonly labelSprites = new Map<CPUState | 'idle', THREE.Sprite>();
 
-  constructor(scene: THREE.Scene, start: Vec2) {
+  constructor(scene: THREE.Scene, start: Vec2, speed = 2.1) {
+    this.speed = speed;
     this.position = { ...start };
     this.lastPosition = { ...start };
     this.group = new THREE.Group();
     this.group.position.set(start.x, 0, start.z);
 
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x73c8f3, roughness: 0.66, metalness: 0.03 });
+
     const body = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.35, 0.72, 6, 12),
-      texturedMaterial('cpu_character', 0x7dc7ff)
+      bodyMaterial
     );
     body.position.y = 0.9;
     body.castShadow = true;
@@ -58,10 +64,24 @@ export class CPU {
     face.castShadow = true;
     this.group.add(face);
 
-    const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.48), iconMaterial('cpu_character', 0xffffff));
-    panel.position.set(0, 1.04, -0.36);
-    panel.rotation.y = Math.PI;
-    this.group.add(panel);
+    const modelParts = [...this.group.children];
+    const groundShadow = new THREE.Mesh(
+      new THREE.CircleGeometry(0.46, 32),
+      new THREE.MeshBasicMaterial({ color: 0x20333a, transparent: true, opacity: 0.18, depthWrite: false })
+    );
+    groundShadow.rotation.x = -Math.PI / 2;
+    groundShadow.position.y = 0.025;
+    this.group.add(groundShadow);
+
+    const portrait = new THREE.Sprite(spriteMaterial('cpu_character', 0xffffff));
+    portrait.position.set(0, 1.02, -0.02);
+    portrait.scale.set(1.35, 1.8, 1);
+    portrait.renderOrder = 8;
+    this.group.add(portrait);
+
+    for (const part of modelParts) {
+      part.visible = false;
+    }
 
     this.addStatusLabels();
     this.updateStatusLabel('idle');
@@ -94,7 +114,7 @@ export class CPU {
   }
 
   private chooseNextGoal(context: CPUContext, events: CPUEvent[]): void {
-    if (context.elapsed > 88 && this.coins >= 60 && this.hints >= 3) {
+    if (context.elapsed > context.treasureDelay && this.coins >= context.coinGoal && this.hints >= context.treasureHints) {
       this.setState('goToTreasure', events);
       this.setPathTo(context.treasurePosition);
       return;
@@ -105,7 +125,7 @@ export class CPU {
     );
     const games = context.interactables.filter((item) => item.type === 'minigame');
 
-    if (this.hints < 4 && hints.length > 0 && Math.random() < 0.52) {
+    if (this.hints < context.treasureHints && hints.length > 0 && Math.random() < 0.52) {
       const target = hints[Math.floor(Math.random() * hints.length)];
       this.setState('goToHint', events);
       this.setPathTo(target.position);

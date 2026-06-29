@@ -3,33 +3,48 @@ import type { MiniGameKind } from './types';
 export class MiniGames {
   constructor(private readonly root: HTMLElement) {}
 
-  play(kind: MiniGameKind, repeated: boolean): Promise<number> {
+  play(kind: MiniGameKind, repeated: boolean, difficulty = 1): Promise<number> {
     this.root.classList.remove('is-hidden');
     if (kind === 'match') {
-      return this.playMatch(repeated);
+      return this.playMatch(repeated, difficulty);
     }
     if (kind === 'timing') {
-      return this.playTiming(repeated);
+      return this.playTiming(repeated, difficulty);
     }
     if (kind === 'order') {
-      return this.playOrder(repeated);
+      return this.playOrder(repeated, difficulty);
     }
     if (kind === 'color') {
       return this.playColor(repeated);
     }
     if (kind === 'memory') {
-      return this.playMemory(repeated);
+      return this.playMemory(repeated, difficulty);
     }
     if (kind === 'find') {
       return this.playFind(repeated);
     }
     if (kind === 'addition') {
-      return this.playAddition(repeated);
+      return this.playAddition(repeated, difficulty);
     }
-    return this.playCount(repeated);
+    if (kind === 'difference') {
+      return this.playDifference(repeated, difficulty);
+    }
+    if (kind === 'shape') {
+      return this.playShape(repeated, difficulty);
+    }
+    if (kind === 'sequence') {
+      return this.playSequence(repeated, difficulty);
+    }
+    if (kind === 'sound') {
+      return this.playSound(repeated, difficulty);
+    }
+    if (kind === 'kana') {
+      return this.playKana(repeated, difficulty);
+    }
+    return this.playCount(repeated, difficulty);
   }
 
-  private playMatch(repeated: boolean): Promise<number> {
+  private playMatch(repeated: boolean, difficulty: number): Promise<number> {
     return new Promise((resolve) => {
       const cards = [
         { icon: '★', label: 'ほし' },
@@ -39,7 +54,8 @@ export class MiniGames {
         { icon: '✿', label: 'はな' }
       ];
       const target = cards[Math.floor(Math.random() * cards.length)];
-      const choices = shuffle([target, ...shuffle(cards.filter((card) => card !== target)).slice(0, 2)]);
+      const extraChoices = difficulty >= 4 ? 3 : 2;
+      const choices = shuffle([target, ...shuffle(cards.filter((card) => card !== target)).slice(0, extraChoices)]);
 
       const card = this.createCard('おなじ えを えらぼう', `「${target.label}」と おなじ えは どれ？`);
       const grid = document.createElement('div');
@@ -61,7 +77,7 @@ export class MiniGames {
     });
   }
 
-  private playTiming(repeated: boolean): Promise<number> {
+  private playTiming(repeated: boolean, difficulty: number): Promise<number> {
     return new Promise((resolve) => {
       const card = this.createCard('きらきらを とめよう', 'まんなかに きたら とめてね');
       const track = document.createElement('div');
@@ -83,7 +99,7 @@ export class MiniGames {
       let x = 0;
       const animate = (now: number) => {
         const width = Math.max(1, track.clientWidth - 58);
-        const phase = (now - start) / 560;
+        const phase = (now - start) / Math.max(420, 580 - difficulty * 28);
         x = ((Math.sin(phase) + 1) / 2) * width;
         star.style.transform = `translateX(${x}px)`;
         raf = requestAnimationFrame(animate);
@@ -95,16 +111,18 @@ export class MiniGames {
         const center = track.clientWidth / 2;
         const starCenter = x + 29;
         const distance = Math.abs(starCenter - center);
-        const reward = distance < 36 ? (repeated ? 8 : 20) : distance < 82 ? (repeated ? 6 : 10) : 5;
-        const message = distance < 36 ? 'ぴったり！' : distance < 82 ? 'おしい！' : 'つぎは できるよ！';
+        const perfectRange = Math.max(28, 42 - difficulty * 2);
+        const goodRange = Math.max(68, 92 - difficulty * 3);
+        const reward = distance < perfectRange ? (repeated ? 8 : 20) : distance < goodRange ? (repeated ? 6 : 10) : 5;
+        const message = distance < perfectRange ? 'ぴったり！' : distance < goodRange ? 'おしい！' : 'つぎは できるよ！';
         this.finish(`${message} ${reward}まい もらったよ`, reward, resolve);
       });
     });
   }
 
-  private playCount(repeated: boolean): Promise<number> {
+  private playCount(repeated: boolean, difficulty: number): Promise<number> {
     return new Promise((resolve) => {
-      const target = 3 + Math.floor(Math.random() * 4);
+      const target = 3 + Math.floor(Math.random() * (difficulty >= 4 ? 5 : 4));
       const card = this.createCard('かずを あつめよう', `${target}こ タップして 「できた！」`);
       const grid = document.createElement('div');
       grid.className = 'coin-click-grid';
@@ -151,10 +169,11 @@ export class MiniGames {
     });
   }
 
-  private playOrder(repeated: boolean): Promise<number> {
+  private playOrder(repeated: boolean, difficulty: number): Promise<number> {
     return new Promise((resolve) => {
-      const numbers = [1, 2, 3, 4];
-      const card = this.createCard('じゅんばんに タップ', '1から 4まで じゅんばんに えらぼう');
+      const goal = difficulty >= 5 ? 5 : 4;
+      const numbers = Array.from({ length: goal }, (_, index) => index + 1);
+      const card = this.createCard('じゅんばんに タップ', `1から ${goal}まで じゅんばんに えらぼう`);
       const grid = document.createElement('div');
       grid.className = 'choice-grid compact-choice-grid';
       let next = 1;
@@ -181,7 +200,7 @@ export class MiniGames {
             button.classList.add('is-wrong');
           }
 
-          if (next > 4) {
+          if (next > goal) {
             finished = true;
             const reward = mistakes === 0 ? (repeated ? 8 : 18) : mistakes === 1 ? (repeated ? 6 : 10) : 5;
             const message = mistakes === 0 ? 'ばっちり！' : mistakes === 1 ? 'おしい！' : 'だいじょうぶ！';
@@ -230,13 +249,14 @@ export class MiniGames {
     });
   }
 
-  private playMemory(repeated: boolean): Promise<number> {
+  private playMemory(repeated: boolean, difficulty: number): Promise<number> {
     return new Promise((resolve) => {
       const icons = ['★', '●', '◆', '♬', '✿'];
-      const pattern = shuffle(icons).slice(0, 3);
+      const patternLength = difficulty >= 4 ? 4 : 3;
+      const pattern = shuffle(icons).slice(0, patternLength);
       const choices = [pattern];
       while (choices.length < 3) {
-        const candidate = shuffle(icons).slice(0, 3);
+        const candidate = shuffle(icons).slice(0, patternLength);
         if (!choices.some((choice) => choice.join('') === candidate.join(''))) {
           choices.push(candidate);
         }
@@ -304,10 +324,11 @@ export class MiniGames {
     });
   }
 
-  private playAddition(repeated: boolean): Promise<number> {
+  private playAddition(repeated: boolean, difficulty: number): Promise<number> {
     return new Promise((resolve) => {
-      const a = 1 + Math.floor(Math.random() * 5);
-      const b = 1 + Math.floor(Math.random() * 5);
+      const maxNumber = difficulty >= 4 ? 6 : 5;
+      const a = 1 + Math.floor(Math.random() * maxNumber);
+      const b = 1 + Math.floor(Math.random() * Math.min(maxNumber, 10 - a));
       const answer = a + b;
       const choices = shuffle([answer, answer + 1, Math.max(1, answer - 1)]);
       const card = this.createCard('たしざん できるかな', `${a} + ${b} は いくつ？`);
@@ -320,6 +341,162 @@ export class MiniGames {
         button.textContent = choice.toString();
         bindTap(button, () => {
           const correct = choice === answer;
+          const reward = correct ? (repeated ? 8 : 18) : 5;
+          this.finish(`${correct ? 'せいかい！' : 'おしい！'} ${reward}まい もらったよ`, reward, resolve);
+        });
+        grid.append(button);
+      }
+
+      card.append(grid);
+    });
+  }
+
+  private playDifference(repeated: boolean, difficulty: number): Promise<number> {
+    return new Promise((resolve) => {
+      const scenes = [
+        { same: 'りんご', sameIcon: '●', odd: 'みかん', oddIcon: '◆' },
+        { same: 'ほん', sameIcon: '▣', odd: 'ノート', oddIcon: '□' },
+        { same: 'はな', sameIcon: '✿', odd: 'はっぱ', oddIcon: '♣' },
+        { same: 'ほし', sameIcon: '★', odd: 'つき', oddIcon: '◐' }
+      ];
+      const scene = scenes[Math.floor(Math.random() * scenes.length)];
+      const choiceCount = difficulty >= 4 ? 4 : 3;
+      const oddIndex = Math.floor(Math.random() * choiceCount);
+      const card = this.createCard('まちがいさがし', 'ひとつだけ ちがうものを タップしてね');
+      const grid = document.createElement('div');
+      grid.className = 'choice-grid compact-choice-grid';
+
+      for (let i = 0; i < choiceCount; i += 1) {
+        const isOdd = i === oddIndex;
+        const button = document.createElement('button');
+        button.className = 'choice-card';
+        button.innerHTML = `${isOdd ? scene.oddIcon : scene.sameIcon}<span>${isOdd ? scene.odd : scene.same}</span>`;
+        bindTap(button, () => {
+          const reward = isOdd ? (repeated ? 8 : 18) : 5;
+          this.finish(`${isOdd ? 'みつけた！' : 'だいじょうぶ！'} ${reward}まい もらったよ`, reward, resolve);
+        });
+        grid.append(button);
+      }
+
+      card.append(grid);
+    });
+  }
+
+  private playShape(repeated: boolean, difficulty: number): Promise<number> {
+    return new Promise((resolve) => {
+      const shapes = [
+        { name: 'まる', icon: '●' },
+        { name: 'さんかく', icon: '▲' },
+        { name: 'しかく', icon: '■' },
+        { name: 'ほし', icon: '★' },
+        { name: 'ひしがた', icon: '◆' }
+      ];
+      const target = shapes[Math.floor(Math.random() * shapes.length)];
+      const choiceCount = difficulty >= 4 ? 4 : 3;
+      const choices = shuffle([target, ...shuffle(shapes.filter((shape) => shape !== target)).slice(0, choiceCount - 1)]);
+      const card = this.createCard('かたちあわせ', `「${target.name}」を タップしてね`);
+      const grid = document.createElement('div');
+      grid.className = 'choice-grid compact-choice-grid';
+
+      for (const choice of choices) {
+        const button = document.createElement('button');
+        button.className = 'choice-card shape-choice';
+        button.innerHTML = `${choice.icon}<span>${choice.name}</span>`;
+        bindTap(button, () => {
+          const correct = choice === target;
+          const reward = correct ? (repeated ? 8 : 18) : 5;
+          this.finish(`${correct ? 'ぴったり！' : 'おしい！'} ${reward}まい もらったよ`, reward, resolve);
+        });
+        grid.append(button);
+      }
+
+      card.append(grid);
+    });
+  }
+
+  private playSequence(repeated: boolean, difficulty: number): Promise<number> {
+    return new Promise((resolve) => {
+      const patterns = [
+        { row: ['★', '●', '★', '●'], answer: '★', choices: ['★', '●', '◆'] },
+        { row: ['▲', '■', '▲', '■'], answer: '▲', choices: ['▲', '■', '●'] },
+        { row: ['1', '2', '3', '4'], answer: '5', choices: ['5', '3', '1'] },
+        { row: ['あ', 'い', 'あ', 'い'], answer: 'あ', choices: ['あ', 'い', 'う'] }
+      ];
+      const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+      const card = this.createCard('ならべかえ', 'つぎに くるものを えらぼう');
+      const preview = document.createElement('div');
+      preview.className = 'memory-row';
+      preview.innerHTML = [...pattern.row, '?'].map((icon) => `<span class="memory-token">${icon}</span>`).join('');
+      const grid = document.createElement('div');
+      grid.className = 'choice-grid compact-choice-grid';
+
+      for (const choice of shuffle(pattern.choices)) {
+        const button = document.createElement('button');
+        button.className = 'choice-card sequence-choice';
+        button.textContent = choice;
+        bindTap(button, () => {
+          const correct = choice === pattern.answer;
+          const reward = correct ? (repeated ? 8 : 18) : 5;
+          this.finish(`${correct ? 'せいかい！' : 'もうすこし！'} ${reward}まい もらったよ`, reward, resolve);
+        });
+        grid.append(button);
+      }
+
+      card.append(preview, grid);
+    });
+  }
+
+  private playSound(repeated: boolean, difficulty: number): Promise<number> {
+    return new Promise((resolve) => {
+      const sounds = [
+        { name: 'ぴんぽん', icon: '♪' },
+        { name: 'どん', icon: '●' },
+        { name: 'きらん', icon: '★' },
+        { name: 'ぽん', icon: '◆' },
+        { name: 'しゃらん', icon: '✿' }
+      ];
+      const target = sounds[Math.floor(Math.random() * sounds.length)];
+      const choiceCount = difficulty >= 4 ? 4 : 3;
+      const choices = shuffle([target, ...shuffle(sounds.filter((sound) => sound !== target)).slice(0, choiceCount - 1)]);
+      const card = this.createCard('おとさがし', `きこえた おと「${target.name}」は どれ？`);
+      const preview = document.createElement('div');
+      preview.className = 'sound-preview';
+      preview.textContent = target.icon;
+      const grid = document.createElement('div');
+      grid.className = 'choice-grid compact-choice-grid';
+
+      for (const choice of choices) {
+        const button = document.createElement('button');
+        button.className = 'choice-card sound-choice';
+        button.innerHTML = `${choice.icon}<span>${choice.name}</span>`;
+        bindTap(button, () => {
+          const correct = choice === target;
+          const reward = correct ? (repeated ? 8 : 18) : 5;
+          this.finish(`${correct ? 'よく きけたね！' : 'だいじょうぶ！'} ${reward}まい もらったよ`, reward, resolve);
+        });
+        grid.append(button);
+      }
+
+      card.append(preview, grid);
+    });
+  }
+
+  private playKana(repeated: boolean, difficulty: number): Promise<number> {
+    return new Promise((resolve) => {
+      const kana = ['あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ', 'さ', 'し'];
+      const target = kana[Math.floor(Math.random() * kana.length)];
+      const choiceCount = difficulty >= 4 ? 4 : 3;
+      const choices = shuffle([target, ...shuffle(kana.filter((letter) => letter !== target)).slice(0, choiceCount - 1)]);
+      const card = this.createCard('ひらがなさがし', `「${target}」を タップしてね`);
+      const grid = document.createElement('div');
+      grid.className = 'choice-grid compact-choice-grid';
+
+      for (const choice of choices) {
+        const button = document.createElement('button');
+        button.className = 'choice-card kana-choice';
+        button.textContent = choice;
+        bindTap(button, () => {
+          const correct = choice === target;
           const reward = correct ? (repeated ? 8 : 18) : 5;
           this.finish(`${correct ? 'せいかい！' : 'おしい！'} ${reward}まい もらったよ`, reward, resolve);
         });

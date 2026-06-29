@@ -84,11 +84,24 @@ export class Player {
     addBox([0.14, 0.17, 0.08], [-0.52, 1.76, -0.31], ribbonMaterial, [0, 0, 0.12]);
     addBox([0.14, 0.17, 0.08], [0.52, 1.76, -0.31], ribbonMaterial, [0, 0, -0.12]);
 
+    const modelParts = [...this.group.children];
+    const groundShadow = new THREE.Mesh(
+      new THREE.CircleGeometry(0.46, 32),
+      new THREE.MeshBasicMaterial({ color: 0x20333a, transparent: true, opacity: 0.18, depthWrite: false })
+    );
+    groundShadow.rotation.x = -Math.PI / 2;
+    groundShadow.position.y = 0.025;
+    this.group.add(groundShadow);
+
     const portrait = new THREE.Sprite(spriteMaterial('player_character', 0xffffff));
     portrait.position.set(0, 1, -0.02);
     portrait.scale.set(1.55, 2, 1);
     portrait.renderOrder = 8;
     this.group.add(portrait);
+
+    for (const part of modelParts) {
+      part.visible = false;
+    }
 
     scene.add(this.group);
   }

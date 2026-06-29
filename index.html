@@ -11,8 +11,8 @@
 
       <section id="hud" class="hud is-hidden" aria-live="polite">
         <div class="topbar">
-          <div class="brand">さがせ！たからものを！</div>
-          <div class="meter coin-meter">コイン: <span id="coin-count">00</span> / 60</div>
+          <div id="stage-title" class="brand">ステージ1 おうち</div>
+          <div class="meter coin-meter">コイン: <span id="coin-count">00</span> / <span id="coin-goal">60</span></div>
           <div class="meter cpu-meter">CPU: <span id="cpu-coin-count">00</span><span id="cpu-status" class="cpu-status">さがす</span></div>
           <div class="meter hint-meter">ヒント: <span id="hint-left">6</span></div>
         </div>
@@ -23,7 +23,7 @@
         </aside>
 
         <div id="interact-prompt" class="interact-prompt is-hidden">Eで しらべる</div>
-        <canvas id="mini-map" class="mini-map" width="190" height="150" aria-label="いえのマップ"></canvas>
+        <canvas id="mini-map" class="mini-map" width="190" height="150" aria-label="ステージのマップ"></canvas>
         <div id="toast" class="toast is-hidden"></div>
         <div id="mobile-controls" class="mobile-controls" aria-label="スマホ操作">
           <div class="mobile-dpad" aria-label="いどう">
@@ -40,13 +40,13 @@
         <div class="screen-panel">
           <p class="screen-kicker">3D たからさがし</p>
           <h1>さがせ！<br />たからものを！</h1>
-          <button id="start-button" class="primary-button">はじめる</button>
+          <div id="stage-select-grid" class="stage-select-grid" aria-label="ステージをえらぶ"></div>
           <button id="howto-button" class="secondary-button">あそびかた</button>
           <div id="howto-text" class="howto is-hidden">
-            <p>いえの なかを あるこう</p>
+            <p>ステージを えらんで あるこう</p>
             <p>ヒントを あつめよう</p>
-            <p>ゲームで コインを 60まい あつめよう</p>
-            <p>たからを みつけて あけよう</p>
+            <p>ゲームで コインを あつめよう</p>
+            <p>ヒントが ふえると たからが みつけやすいよ</p>
           </div>
         </div>
       </section>
@@ -56,7 +56,9 @@
           <p id="end-kicker" class="screen-kicker">クリア！</p>
           <h2 id="end-title">たからものを あけたよ！</h2>
           <p id="end-message">きらきらの たからものを みつけたね。</p>
+          <button id="next-stage-button" class="primary-button is-hidden">つぎのステージ</button>
           <button id="retry-button" class="primary-button">もういちど</button>
+          <button id="stage-select-button" class="secondary-button">ステージ選択</button>
         </div>
       </section>
 

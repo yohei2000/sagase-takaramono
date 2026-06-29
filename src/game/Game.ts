@@ -4,15 +4,23 @@ import { distance2 } from './Collision';
 import { GameAudio } from './Audio';
 import { MiniGames } from './MiniGames';
 import { Player } from './Player';
+import { getNextStageId, getStage, STAGES } from './Stages';
 import { UI } from './UI';
 import { World } from './World';
-import type { GameMode, InputState, Interactable, Vec2 } from './types';
+import type { GameMode, HudState, InputState, Interactable, StageDefinition, StageId, StageSelectItem, Vec2 } from './types';
 
 type Sparkle = {
   mesh: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
   velocity: THREE.Vector3;
   life: number;
 };
+
+type StageProgress = {
+  highestUnlockedStage: StageId;
+  clearedStages: StageId[];
+};
+
+const PROGRESS_KEY = 'sagase-takaramono-progress-v1';
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
@@ -26,6 +34,8 @@ export class Game {
   private readonly sparkles: Sparkle[] = [];
 
   private scene = new THREE.Scene();
+  private stage: StageDefinition = STAGES[0];
+  private progress: StageProgress = this.loadProgress();
   private world!: World;
   private player!: Player;
   private cpu!: CPU;
@@ -48,8 +58,17 @@ export class Game {
     this.miniGames = new MiniGames(miniGameRoot);
 
     this.ui.bindHowTo();
-    this.ui.onStart(() => this.beginRun());
-    this.ui.onRetry(() => this.beginRun());
+    this.ui.onStageSelect((stageId) => this.beginRun(stageId));
+    this.ui.onRetry(() => this.beginRun(this.stage.id));
+    this.ui.onNextStage(() => {
+      const nextStageId = getNextStageId(this.stage.id);
+      if (nextStageId && this.isStageUnlocked(nextStageId)) {
+        this.beginRun(nextStageId);
+        return;
+      }
+      this.showStageSelect();
+    });
+    this.ui.onStageSelectButton(() => this.showStageSelect());
     this.ui.onMobileMoveChange((input) => {
       this.touchInput = input;
     });
@@ -57,11 +76,19 @@ export class Game {
     this.bindInput(canvas);
     this.createScene();
     this.resize();
+    this.showStageSelect();
     window.addEventListener('resize', () => this.resize());
     this.animate();
   }
 
-  private beginRun(): void {
+  private beginRun(stageId: StageId = this.stage.id): void {
+    if (!this.isStageUnlocked(stageId)) {
+      this.ui.showToast('まえの ステージを クリアすると あそべるよ', 3200);
+      this.showStageSelect();
+      return;
+    }
+
+    this.stage = getStage(stageId);
     this.audio.unlock();
     this.keys.clear();
     this.touchInput = { forward: false, back: false, left: false, right: false };
@@ -75,13 +102,13 @@ export class Game {
     this.ui.showGame();
     this.ui.setCpuStatus('さがす');
     this.ui.updateHud(this.hudState());
-    this.ui.showToast('たからさがし スタート！');
+    this.ui.showToast(`${this.stage.shortTitle}で たからさがし スタート！`);
   }
 
   private createScene(): void {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xb9edff);
-    this.scene.fog = new THREE.Fog(0xb9edff, 26, 58);
+    this.scene.background = new THREE.Color(this.stage.skyColor);
+    this.scene.fog = new THREE.Fog(this.stage.skyColor, this.stage.fogNear, this.stage.fogFar);
 
     const hemi = new THREE.HemisphereLight(0xffffff, 0x9ec7c0, 2.6);
     this.scene.add(hemi);
@@ -90,15 +117,22 @@ export class Game {
     sun.position.set(8, 14, 5);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -18;
-    sun.shadow.camera.right = 18;
-    sun.shadow.camera.top = 18;
-    sun.shadow.camera.bottom = -18;
+    const shadowSpan = Math.max(
+      Math.abs(this.stage.bounds.xMin),
+      Math.abs(this.stage.bounds.xMax),
+      Math.abs(this.stage.bounds.zMin),
+      Math.abs(this.stage.bounds.zMax),
+      18
+    );
+    sun.shadow.camera.left = -shadowSpan;
+    sun.shadow.camera.right = shadowSpan;
+    sun.shadow.camera.top = shadowSpan;
+    sun.shadow.camera.bottom = -shadowSpan;
     this.scene.add(sun);
 
-    this.world = new World(this.scene);
+    this.world = new World(this.scene, this.stage);
     this.player = new Player(this.scene, this.world.playerStart);
-    this.cpu = new CPU(this.scene, this.world.cpuStart);
+    this.cpu = new CPU(this.scene, this.world.cpuStart, this.stage.cpu.speed);
     this.sparkles.length = 0;
     this.updateCamera();
   }
@@ -174,7 +208,10 @@ export class Game {
       interactables: this.world.interactables,
       colliders: this.world.colliders,
       houseBounds: this.world.houseBounds,
-      treasurePosition: this.world.treasurePosition
+      treasurePosition: this.world.treasurePosition,
+      coinGoal: this.stage.coinGoal,
+      treasureDelay: this.stage.cpu.treasureDelay,
+      treasureHints: this.stage.cpu.treasureHints
     });
     this.handleCPUEvents(events);
 
@@ -228,7 +265,7 @@ export class Game {
     const repeated = target.plays > 0;
     this.mode = 'miniGame';
     this.ui.setPrompt(null);
-    void this.miniGames.play(target.miniGameKind!, repeated).then((reward) => {
+    void this.miniGames.play(target.miniGameKind!, repeated, this.stage.difficulty).then((reward) => {
       target.plays += 1;
       this.coins += reward;
       this.audio.coin();
@@ -244,20 +281,21 @@ export class Game {
   }
 
   private tryOpenTreasure(target: Interactable): void {
-    if (this.coins < 60) {
-      this.ui.showToast('たからばこを みつけた！でも コインが 60まい いるよ', 4400);
+    if (this.coins < this.stage.coinGoal) {
+      this.ui.showToast(`たからばこを みつけた！でも コインが ${this.stage.coinGoal}まい いるよ`, 4400);
       return;
     }
 
     target.done = true;
     this.mode = 'won';
+    this.markStageCleared(this.stage.id);
     this.world.openTreasure();
     this.spawnSparkles(this.world.treasurePosition, 230, 1.75);
     this.spawnSparkles(this.player.position, 70, 1.05);
     this.ui.showReward(0, 'treasure');
     this.ui.showToast('やった！ たからばこが ひらいたよ！', 2300);
     this.audio.treasure();
-    window.setTimeout(() => this.ui.showEnd('win'), 1700);
+    window.setTimeout(() => this.ui.showEnd('win', this.stage, getNextStageId(this.stage.id)), 1700);
   }
 
   private handleCPUEvents(events: CPUEvent[]): void {
@@ -284,7 +322,7 @@ export class Game {
         this.world.openTreasure();
         this.spawnSparkles(this.world.treasurePosition, 110, 1.25);
         this.audio.lose();
-        window.setTimeout(() => this.ui.showEnd('lose'), 1000);
+        window.setTimeout(() => this.ui.showEnd('lose', this.stage, null), 1000);
       }
     }
   }
@@ -300,8 +338,9 @@ export class Game {
         continue;
       }
 
+      const radius = item.type === 'treasure' ? this.world.treasureSearchRadius(this.hints.length) : item.radius;
       const d2 = distance2(this.player.position, item.position);
-      if (d2 <= item.radius * item.radius && d2 < bestDistance) {
+      if (d2 <= radius * radius && d2 < bestDistance) {
         best = item;
         bestDistance = d2;
       }
@@ -332,32 +371,34 @@ export class Game {
     return {
       forward: this.touchInput.forward || this.keys.has('KeyW') || this.keys.has('ArrowUp'),
       back: this.touchInput.back || this.keys.has('KeyS') || this.keys.has('ArrowDown'),
-      left: this.touchInput.left || this.keys.has('KeyA') || this.keys.has('ArrowLeft'),
-      right: this.touchInput.right || this.keys.has('KeyD') || this.keys.has('ArrowRight')
+      left: this.touchInput.right || this.keys.has('KeyD') || this.keys.has('ArrowRight'),
+      right: this.touchInput.left || this.keys.has('KeyA') || this.keys.has('ArrowLeft')
     };
   }
 
-  private hudState() {
+  private hudState(): HudState {
     return {
       coins: this.coins,
+      coinGoal: this.stage.coinGoal,
       cpuCoins: this.cpu.coins,
       hints: this.hints,
-      hintsTotal: 6
+      hintsTotal: this.stage.hints.length,
+      stageTitle: this.stage.title
     };
   }
 
   private showGuidanceMessage(): void {
-    if (this.hints.length < 2) {
+    if (this.hints.length < this.stage.treasurePromptHints) {
       this.ui.showToast('まよったら ひかる ヒントカードを さがそう！', 4300);
       return;
     }
 
-    if (this.coins < 60) {
-      this.ui.showToast('コインが 60まい いるよ。きんいろの ゲームへ いこう！', 4300);
+    if (this.coins < this.stage.coinGoal) {
+      this.ui.showToast(`コインが ${this.stage.coinGoal}まい いるよ。きんいろの ゲームへ いこう！`, 4300);
       return;
     }
 
-    this.ui.showToast('あかい ほんだなの うしろを しらべてみよう！', 4300);
+    this.ui.showToast(this.stage.treasureClue, 4300);
   }
 
   private cpuStateStatus(state: string): string {
@@ -384,6 +425,67 @@ export class Game {
       return 'たからへ いくよ';
     }
     return '';
+  }
+
+  private showStageSelect(): void {
+    this.mode = 'menu';
+    this.keys.clear();
+    this.touchInput = { forward: false, back: false, left: false, right: false };
+    this.ui.showStageSelect(this.stageSelectItems());
+  }
+
+  private stageSelectItems(): StageSelectItem[] {
+    return STAGES.map((stage) => ({
+      id: stage.id,
+      title: stage.title,
+      subtitle: stage.subtitle,
+      description: stage.description,
+      unlocked: this.isStageUnlocked(stage.id),
+      cleared: this.progress.clearedStages.includes(stage.id)
+    }));
+  }
+
+  private isStageUnlocked(stageId: StageId): boolean {
+    return stageId <= this.progress.highestUnlockedStage;
+  }
+
+  private markStageCleared(stageId: StageId): void {
+    if (!this.progress.clearedStages.includes(stageId)) {
+      this.progress.clearedStages.push(stageId);
+    }
+
+    const nextStageId = getNextStageId(stageId);
+    if (nextStageId && nextStageId > this.progress.highestUnlockedStage) {
+      this.progress.highestUnlockedStage = nextStageId;
+    }
+
+    this.saveProgress();
+  }
+
+  private loadProgress(): StageProgress {
+    try {
+      const raw = window.localStorage.getItem(PROGRESS_KEY);
+      if (!raw) {
+        return { highestUnlockedStage: 1, clearedStages: [] };
+      }
+      const parsed = JSON.parse(raw) as Partial<StageProgress>;
+      const clearedStages = (parsed.clearedStages ?? [])
+        .filter((id): id is StageId => STAGES.some((stage) => stage.id === id));
+      const highest = Number(parsed.highestUnlockedStage);
+      const highestUnlockedStage = STAGES.some((stage) => stage.id === highest)
+        ? (highest as StageId)
+        : 1;
+      return {
+        highestUnlockedStage: Math.max(1, highestUnlockedStage) as StageId,
+        clearedStages
+      };
+    } catch {
+      return { highestUnlockedStage: 1, clearedStages: [] };
+    }
+  }
+
+  private saveProgress(): void {
+    window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(this.progress));
   }
 
   private spawnSparkles(position: Vec2, count = 82, power = 1): void {

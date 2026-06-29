@@ -13,7 +13,20 @@ export type Bounds = {
   label?: string;
 };
 
-export type MiniGameKind = 'match' | 'timing' | 'count' | 'order' | 'color' | 'memory' | 'find' | 'addition';
+export type MiniGameKind =
+  | 'match'
+  | 'timing'
+  | 'count'
+  | 'order'
+  | 'color'
+  | 'memory'
+  | 'find'
+  | 'addition'
+  | 'difference'
+  | 'shape'
+  | 'sequence'
+  | 'sound'
+  | 'kana';
 
 export type InteractableType = 'hint' | 'minigame' | 'treasure';
 
@@ -39,11 +52,111 @@ export type InputState = {
 
 export type HudState = {
   coins: number;
+  coinGoal: number;
   cpuCoins: number;
   hints: string[];
   hintsTotal: number;
+  stageTitle: string;
 };
 
 export type GameMode = 'menu' | 'playing' | 'miniGame' | 'won' | 'lost';
 
 export type CPUState = 'wander' | 'goToHint' | 'playMiniGame' | 'goToTreasure' | 'openTreasure';
+
+export type StageId = 1 | 2 | 3 | 4 | 5;
+
+export type StageArea = {
+  label: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  color: number;
+};
+
+export type StageWall = {
+  label: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  height?: number;
+  color?: number;
+};
+
+export type StageProp = {
+  label: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  height: number;
+  color: number;
+  texture?: string;
+  collider?: boolean;
+  y?: number;
+};
+
+export type StageLabel = {
+  text: string;
+  x: number;
+  z: number;
+  background: string;
+};
+
+export type StageHint = {
+  id: string;
+  position: Vec2;
+  text: string;
+};
+
+export type StageMiniSpot = {
+  id: string;
+  position: Vec2;
+  kind: MiniGameKind;
+  label: string;
+};
+
+export type StageDefinition = {
+  id: StageId;
+  title: string;
+  shortTitle: string;
+  subtitle: string;
+  description: string;
+  difficulty: number;
+  coinGoal: number;
+  bounds: Bounds;
+  playerStart: Vec2;
+  cpuStart: Vec2;
+  treasurePosition: Vec2;
+  treasureRevealHints: number;
+  treasurePromptHints: number;
+  treasureClue: string;
+  floorColor: number;
+  wallColor: number;
+  skyColor: number;
+  fogNear: number;
+  fogFar: number;
+  boundaryHeight: number;
+  cpu: {
+    treasureDelay: number;
+    treasureHints: number;
+    speed: number;
+  };
+  hints: StageHint[];
+  miniSpots: StageMiniSpot[];
+  areas?: StageArea[];
+  walls?: StageWall[];
+  props?: StageProp[];
+  labels?: StageLabel[];
+  plants?: Vec2[];
+};
+
+export type StageSelectItem = {
+  id: StageId;
+  title: string;
+  subtitle: string;
+  description: string;
+  unlocked: boolean;
+  cleared: boolean;
+};

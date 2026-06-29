@@ -12,6 +12,7 @@ const textureBaseUrl = `${import.meta.env.BASE_URL}assets/textures/`;
 
 function applyTextureOptions(texture: THREE.Texture, options: TextureOptions): void {
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
   if (options.repeat) {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -73,7 +74,9 @@ export function iconMaterial(
   const material = new THREE.MeshBasicMaterial({
     color: fallbackColor,
     transparent: true,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    alphaTest: 0.02,
+    depthWrite: false
   });
 
   loadTexture(textureName, {}, (texture) => {

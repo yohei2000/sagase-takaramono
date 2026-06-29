@@ -355,7 +355,7 @@ button {
 
 .screen-panel,
 .mini-card {
-  width: min(640px, 100%);
+  width: min(860px, 100%);
   border-radius: 8px;
   background: #fffaf0;
   padding: clamp(20px, 4vw, 38px);
@@ -432,9 +432,74 @@ h1,
 .primary-button:active,
 .secondary-button:active,
 .mini-button:active,
-.choice-card:active {
+.choice-card:active,
+.stage-card:active {
   transform: translateY(4px);
   box-shadow: 0 3px 0 rgba(36, 51, 58, 0.2);
+}
+
+.stage-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 14px auto 12px;
+}
+
+.stage-card {
+  min-height: 142px;
+  border: 3px solid rgba(36, 51, 58, 0.16);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #173642;
+  box-shadow: 0 7px 0 #9ebbc1;
+  cursor: pointer;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 10px;
+  text-align: left;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.stage-card strong {
+  font-size: 19px;
+  line-height: 1.15;
+}
+
+.stage-card span,
+.stage-card small {
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.stage-card small {
+  color: #43616a;
+  font-size: 13px;
+}
+
+.stage-card-status {
+  width: fit-content;
+  min-width: 68px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: #ffe17d;
+  color: #7a4a00;
+  font-size: 13px;
+  text-align: center;
+}
+
+.stage-card.is-locked {
+  background: #e5edf0;
+  color: #6f8288;
+  cursor: not-allowed;
+  box-shadow: 0 7px 0 #b8c5c9;
+}
+
+.stage-card.is-locked .stage-card-status {
+  background: #d1dde1;
+  color: #5f7177;
 }
 
 .howto {
@@ -617,6 +682,33 @@ h1,
   font-weight: 900;
 }
 
+.sound-preview {
+  width: 92px;
+  height: 92px;
+  margin: 12px auto 4px;
+  border-radius: 8px;
+  background: #e5f5ff;
+  border: 3px solid #8dc4d7;
+  display: grid;
+  place-items: center;
+  color: #17609b;
+  font-size: 52px;
+  font-weight: 900;
+}
+
+.shape-choice,
+.sound-choice,
+.kana-choice,
+.sequence-choice {
+  background: #fff7c7;
+}
+
+.kana-choice,
+.sequence-choice {
+  color: #7a4a00;
+  font-size: clamp(46px, 9vw, 72px);
+}
+
 .star-track {
   position: relative;
   width: min(480px, 100%);
@@ -740,6 +832,10 @@ h1,
   .choice-grid {
     grid-template-columns: 1fr;
   }
+
+  .stage-select-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 560px), (orientation: landscape) and (pointer: coarse) {
@@ -831,7 +927,7 @@ h1,
 
   .screen-panel,
   .mini-card {
-    width: min(640px, calc(100vw - 24px));
+    width: min(860px, calc(100vw - 24px));
     max-height: calc(100vh - 20px);
     padding: 14px 18px;
     overflow: auto;
@@ -872,6 +968,33 @@ h1,
   .howto p {
     margin: 5px 0;
     font-size: 16px;
+  }
+
+  .stage-select-grid {
+    grid-template-columns: repeat(5, minmax(112px, 1fr));
+    gap: 8px;
+    margin: 8px auto;
+  }
+
+  .stage-card {
+    min-height: 108px;
+    padding: 8px;
+    gap: 3px;
+  }
+
+  .stage-card strong {
+    font-size: 15px;
+  }
+
+  .stage-card span,
+  .stage-card small {
+    font-size: 12px;
+  }
+
+  .stage-card-status {
+    min-width: 56px;
+    padding: 2px 6px;
+    font-size: 11px;
   }
 
   .mini-card h2 {
@@ -984,5 +1107,12 @@ h1,
     margin: 8px auto 12px;
     padding: 6px 12px;
     font-size: clamp(38px, 10vh, 56px);
+  }
+
+  .sound-preview {
+    width: 62px;
+    height: 62px;
+    margin: 6px auto 0;
+    font-size: 38px;
   }
 }
