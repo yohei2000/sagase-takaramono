@@ -53,10 +53,10 @@ export class Player {
       });
 
     const skinMaterial = material(0xffd7bc, 0.68);
-    const shirtMaterial = material(0xffffff, 0.78);
-    const shirtShadowMaterial = material(0xe8edf2, 0.82);
-    const skirtMaterial = material(0xfffbf2, 0.7);
-    const skirtShadowMaterial = material(0xe8edf2, 0.78);
+    const shirtMaterial = material(0xbcc8cc, 0.78);
+    const shirtShadowMaterial = material(0xa5b2b8, 0.82);
+    const skirtMaterial = material(0xb6c2c7, 0.7);
+    const skirtShadowMaterial = material(0x96a3aa, 0.78);
     const hairMaterial = material(0x221d27, 0.56);
     const hairDeepMaterial = material(0x17131b, 0.52);
     const hairHighlightMaterial = material(0x3b2b38, 0.62);
@@ -71,7 +71,7 @@ export class Player {
     const mouthMaterial = material(0xd85a5e, 0.62);
     const noseMaterial = material(0xefb69b, 0.7);
     const blushMaterial = material(0xf29c9c, 0.74);
-    const collarMaterial = material(0xfffbf1, 0.72);
+    const collarMaterial = material(0xd3dcdf, 0.72);
     const backpackMaterial = material(0x75d8f7, 0.58);
     const backpackDarkMaterial = material(0x37a8d1, 0.64);
     const backpackEdgeMaterial = material(0x238db8, 0.58);
