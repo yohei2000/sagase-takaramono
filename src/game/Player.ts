@@ -63,6 +63,8 @@ export class Player {
     const hairTieMaterial = material(0x2c6f91, 0.58);
     const hatMaterial = material(0xffde45, 0.64);
     const hatBandMaterial = material(0xdcae19, 0.7);
+    const hatRibbonMaterial = material(0x8d54d9, 0.58);
+    const hatRibbonKnotMaterial = material(0x6f35b8, 0.62);
     const bootMaterial = material(0x3b2b1f, 0.64);
     const soleMaterial = material(0x1f1714, 0.76);
     const eyeMaterial = material(0x20222a, 0.52);
@@ -602,6 +604,9 @@ export class Player {
       0
     ]);
     addMesh(head, createHatBrimGeometry(0.505, 0.435, 0.468, 0.4, 0.026), hatBandMaterial, [0, 0.14, 0.02]);
+    addLowPolySphere(head, 0.055, hatRibbonMaterial, [0.18, 0.205, 0.405], [1.18, 0.78, 0.32]);
+    addLowPolySphere(head, 0.055, hatRibbonMaterial, [0.29, 0.205, 0.405], [1.18, 0.78, 0.32]);
+    addLowPolySphere(head, 0.037, hatRibbonKnotMaterial, [0.235, 0.205, 0.425], [0.85, 0.85, 0.45]);
 
     for (const [x, rotZ] of [
       [-0.16, -0.08],
