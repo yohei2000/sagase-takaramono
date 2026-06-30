@@ -80,6 +80,20 @@ const assets = [
     kind: 'ground'
   },
   {
+    name: 'tennis_court_floor',
+    prompt:
+      'seamless acrylic blue tennis hard court floor texture, clean painted surface, very subtle scuffs and fine speckles, cheerful storybook game style, tileable, no court lines, no text',
+    palette: ['#e8f4fa', '#b9d9e8', '#ffffff'],
+    kind: 'tennisCourt'
+  },
+  {
+    name: 'tennis_runoff_floor',
+    prompt:
+      'seamless green tennis hard court runoff floor texture, clean painted acrylic surface, very subtle scuffs and fine speckles, cheerful storybook game style, tileable, no court lines, no text',
+    palette: ['#e8f7e5', '#b9d8af', '#ffffff'],
+    kind: 'tennisRunoff'
+  },
+  {
     name: 'genkan_doma_floor',
     prompt:
       'seamless gray beige concrete tile doma floor texture for a Japanese school entrance, lightly dusty and scuffed, cheerful storybook game style, tileable, no text',
@@ -245,6 +259,14 @@ function svgBody(kind, a, b, c) {
       .join('\n  ')}
   ${range(14)
     .map((i) => `<path d="M${(i * 71) % 512} ${(i * 43) % 512} C ${70 + ((i * 37) % 380)} ${28 + ((i * 67) % 456)}, ${120 + ((i * 79) % 360)} ${40 + ((i * 31) % 430)}, ${512 - ((i * 29) % 230)} ${18 + ((i * 47) % 470)}" stroke="${i % 2 ? b : c}" stroke-width="${5 + (i % 4) * 2}" fill="none" opacity="0.18"/>`)
+    .join('\n  ')}`;
+  }
+  if (kind === 'tennisCourt' || kind === 'tennisRunoff') {
+    return `${range(36)
+      .map((i) => `<circle cx="${18 + ((i * 53) % 220)}" cy="${22 + ((i * 71) % 214)}" r="${1 + (i % 3)}" fill="${i % 2 ? b : c}" opacity="${i % 2 ? '0.28' : '0.36'}"/>`)
+      .join('\n  ')}
+  ${range(10)
+    .map((i) => `<path d="M${12 + ((i * 67) % 210)} ${20 + ((i * 41) % 210)} l${20 + (i % 4) * 8} ${i % 2 ? 3 : -3}" stroke="${b}" stroke-width="${1 + (i % 2)}" stroke-linecap="round" opacity="0.18"/>`)
     .join('\n  ')}`;
   }
   if (kind === 'doma') {

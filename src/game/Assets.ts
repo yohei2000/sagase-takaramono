@@ -17,6 +17,8 @@ const svgFirstTextures = new Set([
   'park_sand_floor',
   'library_floor',
   'library_carpet_floor',
+  'tennis_court_floor',
+  'tennis_runoff_floor',
   'street_floor',
   'shop_floor'
 ]);
