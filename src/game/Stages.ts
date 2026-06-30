@@ -594,38 +594,9 @@ export const STAGES: StageDefinition[] = [
       { label: 'ボール3', x: -8.2, z: -12.1, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 },
       { label: 'ボール4', x: 20.6, z: -12.2, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 },
 
-      { label: 'ラケット1ヘッド', x: -6.15, z: 7.25, width: 0.82, depth: 1.08, height: 0.07, color: 0xff7b53, shape: 'cylinder', collider: false, y: 0.105, segments: 32 },
-      { label: 'ラケット1ガット', x: -6.15, z: 7.25, width: 0.58, depth: 0.78, height: 0.08, color: 0xd8f8ff, shape: 'cylinder', collider: false, y: 0.16, segments: 32 },
-      { label: 'ラケット1ガット縦', x: -6.15, z: 7.25, width: 0.06, depth: 0.72, height: 0.035, color: 0xffffff, collider: false, y: 0.22 },
-      { label: 'ラケット1ガット横A', x: -6.15, z: 7.06, width: 0.48, depth: 0.045, height: 0.035, color: 0xffffff, collider: false, y: 0.225 },
-      { label: 'ラケット1ガット横B', x: -6.15, z: 7.44, width: 0.48, depth: 0.045, height: 0.035, color: 0xffffff, collider: false, y: 0.225 },
-      { label: 'ラケット1グリップ', x: -6.63, z: 6.36, width: 0.16, depth: 1.28, height: 0.08, color: 0x29343b, rotationY: -0.45, collider: false, y: 0.12 },
-      { label: 'ラケット1持ち手', x: -6.93, z: 5.80, width: 0.24, depth: 0.38, height: 0.1, color: 0xffcf4d, rotationY: -0.45, collider: false, y: 0.13 },
 
-      { label: 'ラケット2ヘッド', x: 3.95, z: -2.40, width: 0.78, depth: 1.0, height: 0.07, color: 0x4aa8ff, shape: 'cylinder', collider: false, y: 0.105, segments: 32 },
-      { label: 'ラケット2ガット', x: 3.95, z: -2.40, width: 0.54, depth: 0.72, height: 0.08, color: 0xe9fbff, shape: 'cylinder', collider: false, y: 0.16, segments: 32 },
-      { label: 'ラケット2ガット縦', x: 3.95, z: -2.40, width: 0.06, depth: 0.66, height: 0.035, color: 0xffffff, collider: false, y: 0.22 },
-      { label: 'ラケット2ガット横A', x: 3.95, z: -2.56, width: 0.44, depth: 0.045, height: 0.035, color: 0xffffff, collider: false, y: 0.225 },
-      { label: 'ラケット2ガット横B', x: 3.95, z: -2.24, width: 0.44, depth: 0.045, height: 0.035, color: 0xffffff, collider: false, y: 0.225 },
-      { label: 'ラケット2グリップ', x: 4.50, z: -3.22, width: 0.16, depth: 1.25, height: 0.08, color: 0x29343b, rotationY: 0.55, collider: false, y: 0.12 },
-      { label: 'ラケット2持ち手', x: 4.86, z: -3.72, width: 0.24, depth: 0.38, height: 0.1, color: 0xffcf4d, rotationY: 0.55, collider: false, y: 0.13 },
 
-      { label: 'ラケット3ヘッド', x: 18.25, z: -8.95, width: 0.82, depth: 1.06, height: 0.07, color: 0x8b6bff, shape: 'cylinder', collider: false, y: 0.105, segments: 32 },
-      { label: 'ラケット3ガット', x: 18.25, z: -8.95, width: 0.58, depth: 0.76, height: 0.08, color: 0xe9fbff, shape: 'cylinder', collider: false, y: 0.16, segments: 32 },
-      { label: 'ラケット3ガット縦', x: 18.25, z: -8.95, width: 0.06, depth: 0.7, height: 0.035, color: 0xffffff, collider: false, y: 0.22 },
-      { label: 'ラケット3ガット横A', x: 18.25, z: -9.13, width: 0.48, depth: 0.045, height: 0.035, color: 0xffffff, collider: false, y: 0.225 },
-      { label: 'ラケット3ガット横B', x: 18.25, z: -8.77, width: 0.48, depth: 0.045, height: 0.035, color: 0xffffff, collider: false, y: 0.225 },
-      { label: 'ラケット3グリップ', x: 18.73, z: -9.82, width: 0.16, depth: 1.26, height: 0.08, color: 0x29343b, rotationY: 0.44, collider: false, y: 0.12 },
-      { label: 'ラケット3持ち手', x: 19.02, z: -10.38, width: 0.24, depth: 0.38, height: 0.1, color: 0xffcf4d, rotationY: 0.44, collider: false, y: 0.13 },
 
-      { label: '床ボール1', x: -5.35, z: 8.85, width: 0.22, depth: 0.22, height: 0.22, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.16 },
-      { label: '床ボール2', x: -3.85, z: 6.75, width: 0.2, depth: 0.2, height: 0.2, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.15 },
-      { label: '床ボール3', x: -0.95, z: -8.35, width: 0.22, depth: 0.22, height: 0.22, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.16 },
-      { label: '床ボール4', x: 1.05, z: -5.70, width: 0.2, depth: 0.2, height: 0.2, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.15 },
-      { label: '床ボール5', x: 9.10, z: 8.80, width: 0.22, depth: 0.22, height: 0.22, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.16 },
-      { label: '床ボール6', x: 14.50, z: 6.70, width: 0.2, depth: 0.2, height: 0.2, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.15 },
-      { label: '床ボール7', x: 15.70, z: -8.60, width: 0.22, depth: 0.22, height: 0.22, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.16 },
-      { label: '床ボール8', x: 18.40, z: -10.10, width: 0.2, depth: 0.2, height: 0.2, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.15 }
     ],
     labels: [
       { text: 'トイレ', x: -18.4, z: 15.25, background: '#cfeeff' },
