@@ -95,9 +95,14 @@ export type StageProp = {
   depth: number;
   height: number;
   color: number;
+  shape?: 'box' | 'cylinder' | 'sphere' | 'cone';
   texture?: string;
   collider?: boolean;
   y?: number;
+  rotationX?: number;
+  rotationY?: number;
+  rotationZ?: number;
+  segments?: number;
 };
 
 export type StageLabel = {

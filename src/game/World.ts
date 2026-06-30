@@ -180,9 +180,11 @@ export class World {
     const depth = stage.bounds.zMax - stage.bounds.zMin;
     const centerX = (stage.bounds.xMin + stage.bounds.xMax) / 2;
     const centerZ = (stage.bounds.zMin + stage.bounds.zMax) / 2;
-    const floorMaterial = texturedMaterial(stage.floorTexture ?? 'floor_wood', stage.floorColor, {
-      repeat: stage.floorRepeat ?? [10, 8]
-    });
+    const floorMaterial = stage.floorTexture
+      ? texturedMaterial(stage.floorTexture, stage.floorColor, {
+          repeat: stage.floorRepeat ?? [10, 8]
+        })
+      : new THREE.MeshStandardMaterial({ color: stage.floorColor, roughness: 0.86 });
     const wallMaterial = new THREE.MeshStandardMaterial({ color: stage.wallColor, roughness: 0.72 });
 
     const floor = new THREE.Mesh(new THREE.BoxGeometry(width, 0.12, depth), floorMaterial);
@@ -309,17 +311,65 @@ export class World {
     const material = prop.texture
       ? texturedMaterial(prop.texture, prop.color, { repeat: [2, 1] })
       : new THREE.MeshStandardMaterial({ color: prop.color, roughness: 0.72 });
-    this.addBox(
-      prop.label,
-      prop.x,
-      prop.z,
-      prop.width,
-      prop.depth,
-      prop.height,
-      material,
-      prop.collider ?? true,
-      prop.y ?? prop.height / 2
-    );
+    const shape = prop.shape ?? 'box';
+
+    if (
+      shape === 'box' &&
+      prop.rotationX === undefined &&
+      prop.rotationY === undefined &&
+      prop.rotationZ === undefined
+    ) {
+      this.addBox(
+        prop.label,
+        prop.x,
+        prop.z,
+        prop.width,
+        prop.depth,
+        prop.height,
+        material,
+        prop.collider ?? true,
+        prop.y ?? prop.height / 2
+      );
+      return;
+    }
+
+    const mesh = new THREE.Mesh(this.createPropGeometry(prop), material);
+    mesh.position.set(prop.x, prop.y ?? prop.height / 2, prop.z);
+    mesh.rotation.set(prop.rotationX ?? 0, prop.rotationY ?? 0, prop.rotationZ ?? 0);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.name = prop.label;
+    this.group.add(mesh);
+
+    if (prop.collider ?? true) {
+      this.colliders.push({
+        xMin: prop.x - prop.width / 2,
+        xMax: prop.x + prop.width / 2,
+        zMin: prop.z - prop.depth / 2,
+        zMax: prop.z + prop.depth / 2,
+        label: prop.label
+      });
+    }
+  }
+
+  private createPropGeometry(prop: StageProp): THREE.BufferGeometry {
+    const segments = prop.segments ?? 24;
+    if (prop.shape === 'cylinder') {
+      const geometry = new THREE.CylinderGeometry(0.5, 0.5, prop.height, segments);
+      geometry.scale(prop.width, 1, prop.depth);
+      return geometry;
+    }
+    if (prop.shape === 'sphere') {
+      const geometry = new THREE.SphereGeometry(0.5, segments, Math.max(8, Math.floor(segments / 2)));
+      geometry.scale(prop.width, prop.height, prop.depth);
+      return geometry;
+    }
+    if (prop.shape === 'cone') {
+      const geometry = new THREE.ConeGeometry(0.5, prop.height, segments);
+      geometry.scale(prop.width, 1, prop.depth);
+      return geometry;
+    }
+    return new THREE.BoxGeometry(prop.width, prop.height, prop.depth);
   }
 
   private addWall(

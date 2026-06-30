@@ -61,22 +61,24 @@ export class Player {
     const hairDeepMaterial = material(0x17131b, 0.52);
     const hairHighlightMaterial = material(0x3b2b38, 0.62);
     const hairTieMaterial = material(0x2c6f91, 0.58);
+    const hatMaterial = material(0xffde45, 0.64);
+    const hatBandMaterial = material(0xdcae19, 0.7);
     const bootMaterial = material(0x3b2b1f, 0.64);
     const soleMaterial = material(0x1f1714, 0.76);
     const eyeMaterial = material(0x20222a, 0.52);
     const mouthMaterial = material(0xd85a5e, 0.62);
     const noseMaterial = material(0xefb69b, 0.7);
     const blushMaterial = material(0xf29c9c, 0.74);
-    const ribbonMaterial = material(0xf05d67, 0.5);
     const collarMaterial = material(0xfffbf1, 0.72);
     const backpackMaterial = material(0x75d8f7, 0.58);
     const backpackDarkMaterial = material(0x37a8d1, 0.64);
     const backpackEdgeMaterial = material(0x238db8, 0.58);
     const backpackStrapMaterial = material(0x2d86ac, 0.66);
     const backpackPadMaterial = material(0xe9fbff, 0.74);
-    const backpackHighlightMaterial = material(0xffffff, 0.54);
     const faceHighlightMaterial = material(0xffffff, 0.54);
     const metalMaterial = material(0xd8eef5, 0.42, 0.2);
+    const nameTagMaterial = material(0x29b65f, 0.64);
+    const nameTagAccentMaterial = material(0xeafff0, 0.72);
     const shadowMaterial = new THREE.MeshBasicMaterial({
       color: 0x20333a,
       transparent: true,
@@ -147,6 +149,87 @@ export class Player {
         curveSegments: 4
       });
       geometry.center();
+      return geometry;
+    };
+
+    const createHatBrimGeometry = (
+      outerX: number,
+      outerZ: number,
+      innerX: number,
+      innerZ: number,
+      thickness: number
+    ): THREE.BufferGeometry => {
+      const positions: number[] = [];
+      const indices: number[] = [];
+      const segments = 24;
+      const innerTopY = thickness * 0.48;
+      const outerTopY = -thickness * 0.12;
+      const innerBottomY = -thickness * 0.32;
+      const outerBottomY = -thickness * 0.84;
+
+      for (let i = 0; i < segments; i += 1) {
+        const theta = (Math.PI * 2 * i) / segments;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        positions.push(
+          outerX * cos,
+          outerTopY,
+          outerZ * sin,
+          innerX * cos,
+          innerTopY,
+          innerZ * sin,
+          outerX * cos,
+          outerBottomY,
+          outerZ * sin,
+          innerX * cos,
+          innerBottomY,
+          innerZ * sin
+        );
+      }
+
+      for (let i = 0; i < segments; i += 1) {
+        const next = (i + 1) % segments;
+        const outerTop = i * 4;
+        const innerTop = outerTop + 1;
+        const outerBottom = outerTop + 2;
+        const innerBottom = outerTop + 3;
+        const nextOuterTop = next * 4;
+        const nextInnerTop = nextOuterTop + 1;
+        const nextOuterBottom = nextOuterTop + 2;
+        const nextInnerBottom = nextOuterTop + 3;
+
+        indices.push(
+          outerTop,
+          innerTop,
+          nextOuterTop,
+          innerTop,
+          nextInnerTop,
+          nextOuterTop,
+          outerBottom,
+          nextOuterBottom,
+          innerBottom,
+          innerBottom,
+          nextInnerBottom,
+          nextOuterBottom,
+          outerTop,
+          nextOuterTop,
+          outerBottom,
+          outerBottom,
+          nextOuterTop,
+          nextOuterBottom,
+          innerTop,
+          innerBottom,
+          innerBottom,
+          nextInnerTop,
+          nextInnerBottom,
+          nextInnerTop
+        );
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
       return geometry;
     };
 
@@ -280,8 +363,8 @@ export class Player {
     rightUpperLeg.position.set(0.092, -0.05, 0);
     rightLowerLeg.position.set(0, -0.35, 0);
     rightFoot.position.set(0, -0.27, 0.07);
-    leftPigtail.position.set(-0.285, -0.07, 0);
-    rightPigtail.position.set(0.285, -0.07, 0);
+    leftPigtail.position.set(-0.285, -0.015, 0);
+    rightPigtail.position.set(0.285, -0.015, 0);
 
     rig.add(hips);
     hips.add(spine, leftUpperLeg, rightUpperLeg);
@@ -364,10 +447,15 @@ export class Player {
       0,
       0
     ]);
-    addMesh(chest, new THREE.BoxGeometry(0.105, 0.13, 0.052), ribbonMaterial, [0, -0.02, 0.29], [
+    addMesh(chest, createRoundedPanelGeometry(0.072, 0.135, 0.018, 0.016), nameTagMaterial, [0.112, -0.006, 0.303], [
       0,
       0,
-      Math.PI / 4
+      0.04
+    ]);
+    addMesh(chest, new THREE.BoxGeometry(0.042, 0.012, 0.012), nameTagAccentMaterial, [0.112, 0.026, 0.318], [
+      0,
+      0,
+      0.04
     ]);
     addMesh(chest, createRandoseruProfileGeometry(0.48, 0.8, 0.42, 0.14), backpackDarkMaterial, [
       0,
@@ -394,22 +482,7 @@ export class Player {
       0,
       0
     ]);
-    addMesh(chest, new THREE.CapsuleGeometry(0.03, 0.27, 4, 8), backpackEdgeMaterial, [0, 0.22, -0.71], [
-      0,
-      0,
-      Math.PI / 2
-    ]);
     addMesh(chest, new THREE.BoxGeometry(0.42, 0.052, 0.06), backpackEdgeMaterial, [0, -0.575, -0.68]);
-    addMesh(chest, createRoundedPanelGeometry(0.18, 0.052, 0.024, 0.014), metalMaterial, [
-      0,
-      -0.07,
-      -0.733
-    ]);
-    addMesh(chest, createRoundedPanelGeometry(0.13, 0.032, 0.02, 0.012), backpackHighlightMaterial, [
-      0,
-      0.08,
-      -0.736
-    ]);
     addMesh(chest, createRandoseruProfileGeometry(0.044, 0.62, 0.35, 0.11), backpackEdgeMaterial, [
       -0.265,
       -0.18,
@@ -507,6 +580,28 @@ export class Player {
     addLowPolySphere(head, 0.25, hairMaterial, [0, 0.06, -0.24], [1.05, 1.05, 0.55]);
     addLowPolySphere(head, 0.27, hairDeepMaterial, [0, -0.02, -0.285], [1.08, 0.92, 0.62]);
     addMesh(head, createRoundedPanelGeometry(0.48, 0.37, 0.055, 0.12), hairDeepMaterial, [0, -0.05, -0.35]);
+    addMesh(
+      head,
+      new THREE.SphereGeometry(0.36, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.46),
+      hatMaterial,
+      [0, 0.255, 0.01],
+      [0, 0, 0],
+      [1.08, 0.6, 1.05]
+    );
+    addMesh(
+      head,
+      new THREE.CylinderGeometry(0.335, 0.375, 0.18, 12, 1, true),
+      hatMaterial,
+      [0, 0.215, 0.01],
+      [0, 0, 0],
+      [1.08, 1, 1.18]
+    );
+    addMesh(head, createHatBrimGeometry(0.5, 0.43, 0.29, 0.245, 0.036), hatMaterial, [0, 0.158, 0.02], [
+      0,
+      0,
+      0
+    ]);
+    addMesh(head, createHatBrimGeometry(0.505, 0.435, 0.468, 0.4, 0.026), hatBandMaterial, [0, 0.14, 0.02]);
 
     for (const [x, rotZ] of [
       [-0.16, -0.08],
@@ -514,16 +609,6 @@ export class Player {
       [0.16, 0.08]
     ] as const) {
       addCapsule(head, 0.044, 0.2, hairDeepMaterial, [x, -0.16, -0.33], [0.08, 0, rotZ], [0.72, 1, 0.66]);
-    }
-
-    for (const [x, y, z, rotZ, scaleX] of [
-      [-0.21, 0.14, 0.29, 0.26, 0.72],
-      [-0.1, 0.13, 0.315, 0.1, 0.66],
-      [0, 0.135, 0.33, 0, 0.68],
-      [0.1, 0.13, 0.315, -0.1, 0.66],
-      [0.21, 0.14, 0.29, -0.26, 0.72]
-    ] as const) {
-      addCapsule(head, 0.034, 0.17, hairDeepMaterial, [x, y, z], [0.2, 0, rotZ], [scaleX, 1, 0.72]);
     }
 
     for (const [side, rotZ] of [
@@ -540,6 +625,16 @@ export class Player {
         1,
         0.72
       ]);
+      addCapsule(head, 0.062, 0.26, hairDeepMaterial, [side * 0.302, 0.025, -0.02], [
+        0.12,
+        side * 0.22,
+        side * 0.1
+      ], [
+        0.78,
+        1,
+        0.76
+      ]);
+      addLowPolySphere(head, 0.082, hairDeepMaterial, [side * 0.315, 0.02, 0.025], [0.7, 0.9, 0.72]);
       addCapsule(head, 0.04, 0.26, hairMaterial, [side * 0.285, 0.005, 0.18], [0.06, 0, side * rotZ], [
         0.78,
         1,
