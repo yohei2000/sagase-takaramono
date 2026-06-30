@@ -213,7 +213,8 @@ export class Game {
       treasurePosition: this.world.treasurePosition,
       coinGoal: this.stage.coinGoal,
       treasureDelay: this.stage.cpu.treasureDelay,
-      treasureHints: this.stage.cpu.treasureHints
+      treasureHints: this.stage.cpu.treasureHints,
+      waypoints: this.stage.cpu.waypoints
     });
     this.handleCPUEvents(events);
 

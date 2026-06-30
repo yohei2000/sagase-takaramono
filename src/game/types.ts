@@ -147,6 +147,7 @@ export type StageDefinition = {
     treasureDelay: number;
     treasureHints: number;
     speed: number;
+    waypoints?: Vec2[];
   };
   hints: StageHint[];
   miniSpots: StageMiniSpot[];

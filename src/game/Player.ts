@@ -53,19 +53,30 @@ export class Player {
       });
 
     const skinMaterial = material(0xffd7bc, 0.68);
-    const shirtMaterial = material(0xf3d13e, 0.78);
-    const shirtShadowMaterial = material(0xdbad25, 0.82);
-    const skirtMaterial = material(0xfff6e5, 0.7);
-    const skirtShadowMaterial = material(0xf0dcc2, 0.78);
+    const shirtMaterial = material(0xffffff, 0.78);
+    const shirtShadowMaterial = material(0xe8edf2, 0.82);
+    const skirtMaterial = material(0xfffbf2, 0.7);
+    const skirtShadowMaterial = material(0xe8edf2, 0.78);
     const hairMaterial = material(0x221d27, 0.56);
+    const hairDeepMaterial = material(0x17131b, 0.52);
     const hairHighlightMaterial = material(0x3b2b38, 0.62);
+    const hairTieMaterial = material(0x2c6f91, 0.58);
     const bootMaterial = material(0x3b2b1f, 0.64);
     const soleMaterial = material(0x1f1714, 0.76);
     const eyeMaterial = material(0x20222a, 0.52);
     const mouthMaterial = material(0xd85a5e, 0.62);
+    const noseMaterial = material(0xefb69b, 0.7);
     const blushMaterial = material(0xf29c9c, 0.74);
     const ribbonMaterial = material(0xf05d67, 0.5);
     const collarMaterial = material(0xfffbf1, 0.72);
+    const backpackMaterial = material(0x75d8f7, 0.58);
+    const backpackDarkMaterial = material(0x37a8d1, 0.64);
+    const backpackEdgeMaterial = material(0x238db8, 0.58);
+    const backpackStrapMaterial = material(0x2d86ac, 0.66);
+    const backpackPadMaterial = material(0xe9fbff, 0.74);
+    const backpackHighlightMaterial = material(0xffffff, 0.54);
+    const faceHighlightMaterial = material(0xffffff, 0.54);
+    const metalMaterial = material(0xd8eef5, 0.42, 0.2);
     const shadowMaterial = new THREE.MeshBasicMaterial({
       color: 0x20333a,
       transparent: true,
@@ -110,6 +121,95 @@ export class Player {
       scale: [number, number, number] = [1, 1, 1]
     ): THREE.Mesh =>
       addMesh(parent, new THREE.DodecahedronGeometry(radius, 1), meshMaterial, position, [0, 0, 0], scale);
+
+    const createRoundedPanelGeometry = (
+      width: number,
+      height: number,
+      depth: number,
+      radius: number
+    ): THREE.ExtrudeGeometry => {
+      const x = -width / 2;
+      const y = -height / 2;
+      const r = Math.min(radius, width / 2, height / 2);
+      const shape = new THREE.Shape();
+      shape.moveTo(x + r, y);
+      shape.lineTo(x + width - r, y);
+      shape.quadraticCurveTo(x + width, y, x + width, y + r);
+      shape.lineTo(x + width, y + height - r);
+      shape.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      shape.lineTo(x + r, y + height);
+      shape.quadraticCurveTo(x, y + height, x, y + height - r);
+      shape.lineTo(x, y + r);
+      shape.quadraticCurveTo(x, y, x + r, y);
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth,
+        bevelEnabled: false,
+        curveSegments: 4
+      });
+      geometry.center();
+      return geometry;
+    };
+
+    const createRandoseruProfileGeometry = (
+      width: number,
+      height: number,
+      depth: number,
+      topRadius: number
+    ): THREE.ExtrudeGeometry => {
+      const x = -depth / 2;
+      const y = -height / 2;
+      const r = Math.min(topRadius, depth / 2, height / 2);
+      const shape = new THREE.Shape();
+      shape.moveTo(x, y);
+      shape.lineTo(x + depth, y);
+      shape.lineTo(x + depth, y + height - r);
+      shape.quadraticCurveTo(x + depth, y + height, x + depth - r, y + height);
+      shape.lineTo(x + r, y + height);
+      shape.quadraticCurveTo(x, y + height, x, y + height - r);
+      shape.lineTo(x, y);
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: width,
+        bevelEnabled: false,
+        curveSegments: 5
+      });
+      geometry.center();
+      return geometry;
+    };
+
+    const createRandoseruFlapGeometry = (width: number): THREE.BufferGeometry => {
+      const positions: number[] = [];
+      const indices: number[] = [];
+
+      const profile: Array<[number, number]> = [
+        [0.31, -0.34],
+        [0.31, -0.46],
+        [0.31, -0.57]
+      ];
+
+      const radius = 0.14;
+      const centerY = 0.17;
+      const centerZ = -0.57;
+      for (let i = 1; i <= 6; i += 1) {
+        const theta = (Math.PI / 2) * (i / 6);
+        profile.push([centerY + Math.cos(theta) * radius, centerZ - Math.sin(theta) * radius]);
+      }
+
+      profile.push([-0.08, -0.71], [-0.31, -0.71], [-0.55, -0.695]);
+
+      for (const [y, z] of profile) {
+        positions.push(-width / 2, y, z, width / 2, y, z);
+      }
+      for (let i = 0; i < profile.length - 1; i += 1) {
+        const a = i * 2;
+        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    };
 
     const groundShadow = addMesh(this.group, new THREE.CircleGeometry(0.56, 18), shadowMaterial, [0, 0.018, 0], [
       -Math.PI / 2,
@@ -168,20 +268,20 @@ export class Player {
     chest.position.set(0, 0.35, 0);
     neck.position.set(0, 0.2, 0);
     head.position.set(0, 0.22, 0);
-    leftUpperArm.position.set(-0.36, 0.14, 0);
+    leftUpperArm.position.set(-0.255, 0.14, 0);
     leftLowerArm.position.set(-0.04, -0.34, 0);
     leftHand.position.set(0, -0.28, 0);
-    rightUpperArm.position.set(0.36, 0.14, 0);
+    rightUpperArm.position.set(0.255, 0.14, 0);
     rightLowerArm.position.set(0.04, -0.34, 0);
     rightHand.position.set(0, -0.28, 0);
-    leftUpperLeg.position.set(-0.16, -0.05, 0);
+    leftUpperLeg.position.set(-0.092, -0.05, 0);
     leftLowerLeg.position.set(0, -0.35, 0);
     leftFoot.position.set(0, -0.27, 0.07);
-    rightUpperLeg.position.set(0.16, -0.05, 0);
+    rightUpperLeg.position.set(0.092, -0.05, 0);
     rightLowerLeg.position.set(0, -0.35, 0);
     rightFoot.position.set(0, -0.27, 0.07);
-    leftPigtail.position.set(-0.36, -0.07, 0);
-    rightPigtail.position.set(0.36, -0.07, 0);
+    leftPigtail.position.set(-0.285, -0.07, 0);
+    rightPigtail.position.set(0.285, -0.07, 0);
 
     rig.add(hips);
     hips.add(spine, leftUpperLeg, rightUpperLeg);
@@ -243,31 +343,122 @@ export class Player {
     this.group.userData.boneRig = { root: hips, skeleton: this.skeleton, bones: this.bones };
 
     // Body core: faceted shapes attached to bones so future animation clips can target the rig.
-    addMesh(hips, new THREE.CylinderGeometry(0.44, 0.56, 0.36, 10, 1, false), skirtMaterial, [0, -0.02, 0]);
-    addMesh(hips, new THREE.CylinderGeometry(0.5, 0.57, 0.08, 10, 1, false), skirtShadowMaterial, [
+    addMesh(hips, new THREE.CylinderGeometry(0.27, 0.36, 0.39, 10, 1, false), skirtMaterial, [0, -0.02, 0]);
+    addMesh(hips, new THREE.CylinderGeometry(0.31, 0.38, 0.07, 10, 1, false), skirtShadowMaterial, [
       0,
       -0.19,
       0
     ]);
-    addMesh(spine, new THREE.CylinderGeometry(0.32, 0.42, 0.58, 10, 1, false), shirtMaterial, [
+    addMesh(spine, new THREE.CylinderGeometry(0.185, 0.25, 0.62, 10, 1, false), shirtMaterial, [
       0,
       0.16,
       0
     ]);
-    addMesh(chest, new THREE.CylinderGeometry(0.38, 0.34, 0.18, 10, 1, false), shirtShadowMaterial, [
+    addMesh(chest, new THREE.CylinderGeometry(0.24, 0.21, 0.18, 10, 1, false), shirtShadowMaterial, [
       0,
       -0.1,
       0
     ]);
-    addMesh(chest, new THREE.BoxGeometry(0.38, 0.08, 0.08), collarMaterial, [0, 0.08, 0.31], [
+    addMesh(chest, new THREE.BoxGeometry(0.23, 0.07, 0.07), collarMaterial, [0, 0.08, 0.235], [
       0,
       0,
       0
     ]);
-    addMesh(chest, new THREE.BoxGeometry(0.14, 0.16, 0.06), ribbonMaterial, [0, -0.02, 0.35], [
+    addMesh(chest, new THREE.BoxGeometry(0.105, 0.13, 0.052), ribbonMaterial, [0, -0.02, 0.29], [
       0,
       0,
       Math.PI / 4
+    ]);
+    addMesh(chest, createRandoseruProfileGeometry(0.48, 0.8, 0.42, 0.14), backpackDarkMaterial, [
+      0,
+      -0.17,
+      -0.465
+    ], [
+      0,
+      Math.PI / 2,
+      0
+    ]);
+    addMesh(chest, createRandoseruFlapGeometry(0.5), backpackMaterial, [0, 0, 0]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.018, 0.34, 4, 8), backpackEdgeMaterial, [0, 0.31, -0.39], [
+      0,
+      0,
+      Math.PI / 2
+    ]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.03, 0.66, 4, 8), backpackEdgeMaterial, [-0.253, -0.16, -0.72], [
+      0,
+      0,
+      0
+    ]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.03, 0.66, 4, 8), backpackEdgeMaterial, [0.253, -0.16, -0.72], [
+      0,
+      0,
+      0
+    ]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.03, 0.27, 4, 8), backpackEdgeMaterial, [0, 0.22, -0.71], [
+      0,
+      0,
+      Math.PI / 2
+    ]);
+    addMesh(chest, new THREE.BoxGeometry(0.42, 0.052, 0.06), backpackEdgeMaterial, [0, -0.575, -0.68]);
+    addMesh(chest, createRoundedPanelGeometry(0.18, 0.052, 0.024, 0.014), metalMaterial, [
+      0,
+      -0.07,
+      -0.733
+    ]);
+    addMesh(chest, createRoundedPanelGeometry(0.13, 0.032, 0.02, 0.012), backpackHighlightMaterial, [
+      0,
+      0.08,
+      -0.736
+    ]);
+    addMesh(chest, createRandoseruProfileGeometry(0.044, 0.62, 0.35, 0.11), backpackEdgeMaterial, [
+      -0.265,
+      -0.18,
+      -0.515
+    ], [
+      0,
+      Math.PI / 2,
+      0
+    ]);
+    addMesh(chest, createRandoseruProfileGeometry(0.044, 0.62, 0.35, 0.11), backpackEdgeMaterial, [
+      0.265,
+      -0.18,
+      -0.515
+    ], [
+      0,
+      Math.PI / 2,
+      0
+    ]);
+    addMesh(chest, new THREE.TorusGeometry(0.042, 0.009, 5, 10), metalMaterial, [-0.295, -0.03, -0.57], [
+      0,
+      Math.PI / 2,
+      0
+    ]);
+    addMesh(chest, new THREE.TorusGeometry(0.042, 0.009, 5, 10), metalMaterial, [0.295, -0.03, -0.57], [
+      0,
+      Math.PI / 2,
+      0
+    ]);
+    addCapsule(chest, 0.018, 0.15, backpackEdgeMaterial, [-0.14, 0.3, -0.305], [0, 0, 0]);
+    addCapsule(chest, 0.018, 0.15, backpackEdgeMaterial, [0.14, 0.3, -0.305], [0, 0, 0]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.018, 0.25, 4, 8), backpackEdgeMaterial, [0, 0.38, -0.305], [
+      0,
+      0,
+      Math.PI / 2
+    ]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.031, 0.62, 4, 8), backpackStrapMaterial, [-0.17, -0.12, -0.035], [
+      0.18,
+      0.02,
+      -0.04
+    ]);
+    addMesh(chest, new THREE.CapsuleGeometry(0.031, 0.62, 4, 8), backpackStrapMaterial, [0.17, -0.12, -0.035], [
+      0.18,
+      -0.02,
+      0.04
+    ]);
+    addMesh(chest, new THREE.TorusGeometry(0.135, 0.013, 5, 16, Math.PI), backpackPadMaterial, [0, -0.08, -0.285], [
+      0,
+      0,
+      Math.PI
     ]);
 
     // Legs and feet.
@@ -275,14 +466,14 @@ export class Player {
       [-1, leftUpperLeg, leftLowerLeg, leftFoot],
       [1, rightUpperLeg, rightLowerLeg, rightFoot]
     ] as const) {
-      addCapsule(upperLeg, 0.075, 0.28, skinMaterial, [0, -0.17, 0]);
-      addCapsule(lowerLeg, 0.08, 0.24, bootMaterial, [0, -0.12, 0]);
-      addMesh(foot, new THREE.BoxGeometry(0.2, 0.09, 0.34), soleMaterial, [0, 0, 0.08], [
+      addCapsule(upperLeg, 0.042, 0.34, skinMaterial, [0, -0.18, 0]);
+      addCapsule(lowerLeg, 0.049, 0.28, bootMaterial, [0, -0.13, 0]);
+      addMesh(foot, new THREE.BoxGeometry(0.12, 0.068, 0.26), soleMaterial, [0, 0, 0.07], [
         0.06,
         side * 0.03,
         0
       ]);
-      addMesh(foot, new THREE.BoxGeometry(0.18, 0.08, 0.16), bootMaterial, [0, 0.04, -0.08]);
+      addMesh(foot, new THREE.BoxGeometry(0.105, 0.063, 0.12), bootMaterial, [0, 0.04, -0.075]);
     }
 
     // Arms, cuffs, and hands.
@@ -290,36 +481,85 @@ export class Player {
       [-1, leftUpperArm, leftLowerArm, leftHand],
       [1, rightUpperArm, rightLowerArm, rightHand]
     ] as const) {
-      addCapsule(upperArm, 0.078, 0.3, shirtMaterial, [side * 0.03, -0.17, 0]);
-      addMesh(upperArm, new THREE.CylinderGeometry(0.1, 0.1, 0.08, 8), collarMaterial, [
+      addCapsule(upperArm, 0.043, 0.325, shirtMaterial, [side * 0.015, -0.17, 0]);
+      addMesh(upperArm, new THREE.CylinderGeometry(0.057, 0.057, 0.062, 8), collarMaterial, [
         side * 0.04,
         -0.32,
         0
       ]);
-      addCapsule(lowerArm, 0.063, 0.25, skinMaterial, [0, -0.14, 0]);
-      addLowPolySphere(hand, 0.09, skinMaterial, [0, -0.02, 0], [0.95, 0.9, 1]);
+      addCapsule(lowerArm, 0.037, 0.265, skinMaterial, [0, -0.148, 0]);
+      addLowPolySphere(hand, 0.055, skinMaterial, [0, -0.02, 0], [0.95, 0.9, 1]);
     }
 
     // Head, face, and hair are geometry-only: no texture decals.
-    addLowPolySphere(head, 0.34, skinMaterial, [0, 0.02, 0], [0.94, 1.02, 0.92]);
+    addLowPolySphere(head, 0.35, skinMaterial, [0, 0.02, 0], [0.92, 1.04, 0.9]);
+    addLowPolySphere(head, 0.048, skinMaterial, [-0.315, 0.02, 0.015], [0.55, 0.88, 0.42]);
+    addLowPolySphere(head, 0.048, skinMaterial, [0.315, 0.02, 0.015], [0.55, 0.88, 0.42]);
     addMesh(
       head,
-      new THREE.SphereGeometry(0.355, 12, 6, 0, Math.PI * 2, 0, Math.PI * 0.58),
+      new THREE.SphereGeometry(0.365, 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.48),
       hairMaterial,
-      [0, 0.04, 0],
+      [0, 0.07, 0],
       [0, 0, 0],
-      [1.04, 0.92, 1.02]
+      [1.06, 0.96, 1.04]
     );
+    addLowPolySphere(head, 0.31, hairMaterial, [0, 0.24, 0], [1.08, 0.36, 1.08]);
+    addLowPolySphere(head, 0.25, hairMaterial, [0, 0.06, -0.24], [1.05, 1.05, 0.55]);
+    addLowPolySphere(head, 0.27, hairDeepMaterial, [0, -0.02, -0.285], [1.08, 0.92, 0.62]);
+    addMesh(head, createRoundedPanelGeometry(0.48, 0.37, 0.055, 0.12), hairDeepMaterial, [0, -0.05, -0.35]);
 
-    for (const [x, z, rotZ] of [
-      [-0.18, 0.29, 0.28],
-      [0.02, 0.33, -0.08],
-      [0.2, 0.29, -0.28],
-      [-0.18, -0.29, -0.28],
-      [0.02, -0.33, 0.08],
-      [0.2, -0.29, 0.28]
+    for (const [x, rotZ] of [
+      [-0.16, -0.08],
+      [0, 0],
+      [0.16, 0.08]
     ] as const) {
-      addCapsule(head, 0.044, 0.18, hairMaterial, [x, 0.15, z], [0.18, 0, rotZ], [1, 0.9, 1]);
+      addCapsule(head, 0.044, 0.2, hairDeepMaterial, [x, -0.16, -0.33], [0.08, 0, rotZ], [0.72, 1, 0.66]);
+    }
+
+    for (const [x, y, z, rotZ, scaleX] of [
+      [-0.21, 0.14, 0.29, 0.26, 0.72],
+      [-0.1, 0.13, 0.315, 0.1, 0.66],
+      [0, 0.135, 0.33, 0, 0.68],
+      [0.1, 0.13, 0.315, -0.1, 0.66],
+      [0.21, 0.14, 0.29, -0.26, 0.72]
+    ] as const) {
+      addCapsule(head, 0.034, 0.17, hairDeepMaterial, [x, y, z], [0.2, 0, rotZ], [scaleX, 1, 0.72]);
+    }
+
+    for (const [side, rotZ] of [
+      [-1, 0.2],
+      [1, -0.2]
+    ] as const) {
+      addLowPolySphere(head, 0.085, hairDeepMaterial, [side * 0.285, -0.075, -0.08], [0.72, 0.9, 0.68]);
+      addCapsule(head, 0.052, 0.24, hairDeepMaterial, [side * 0.275, -0.055, -0.17], [
+        0.1,
+        side * 0.3,
+        side * 0.14
+      ], [
+        0.72,
+        1,
+        0.72
+      ]);
+      addCapsule(head, 0.04, 0.26, hairMaterial, [side * 0.285, 0.005, 0.18], [0.06, 0, side * rotZ], [
+        0.78,
+        1,
+        0.72
+      ]);
+      addCapsule(head, 0.033, 0.18, hairHighlightMaterial, [side * 0.25, 0.11, -0.24], [0.12, 0, -side * 0.16], [
+        0.82,
+        0.9,
+        0.72
+      ]);
+      addCapsule(head, 0.048, 0.22, hairMaterial, [side * 0.287, -0.02, 0.035], [
+        0.18,
+        side * 0.18,
+        side * 0.08
+      ], [
+        0.82,
+        1,
+        0.78
+      ]);
+      addLowPolySphere(head, 0.068, hairDeepMaterial, [side * 0.294, -0.05, -0.015], [0.78, 0.82, 0.72]);
     }
 
     const addFace = (z: number, yaw: number): void => {
@@ -327,34 +567,84 @@ export class Player {
       faceRoot.position.set(0, 0, z);
       faceRoot.rotation.y = yaw;
       head.add(faceRoot);
-      addMesh(faceRoot, new THREE.BoxGeometry(0.055, 0.09, 0.018), eyeMaterial, [-0.11, 0.06, 0.01]);
-      addMesh(faceRoot, new THREE.BoxGeometry(0.055, 0.09, 0.018), eyeMaterial, [0.11, 0.06, 0.01]);
-      addMesh(faceRoot, new THREE.BoxGeometry(0.12, 0.026, 0.018), mouthMaterial, [0, -0.09, 0.01]);
-      const leftBlush = addMesh(faceRoot, new THREE.CircleGeometry(0.045, 10), blushMaterial, [-0.21, -0.04, 0.014]);
-      const rightBlush = addMesh(faceRoot, new THREE.CircleGeometry(0.045, 10), blushMaterial, [0.21, -0.04, 0.014]);
-      leftBlush.castShadow = false;
-      rightBlush.castShadow = false;
+      const faceMeshes = [
+        addMesh(faceRoot, new THREE.BoxGeometry(0.074, 0.014, 0.012), hairDeepMaterial, [-0.095, 0.125, 0.024], [
+          0,
+          0,
+          -0.08
+        ]),
+        addMesh(faceRoot, new THREE.BoxGeometry(0.074, 0.014, 0.012), hairDeepMaterial, [0.095, 0.125, 0.024], [
+          0,
+          0,
+          0.08
+        ]),
+        addLowPolySphere(faceRoot, 0.049, eyeMaterial, [-0.096, 0.058, 0.024], [0.62, 1.12, 0.18]),
+        addLowPolySphere(faceRoot, 0.049, eyeMaterial, [0.096, 0.058, 0.024], [0.62, 1.12, 0.18]),
+        addLowPolySphere(faceRoot, 0.014, faceHighlightMaterial, [-0.085, 0.079, 0.041], [1, 1, 0.45]),
+        addLowPolySphere(faceRoot, 0.014, faceHighlightMaterial, [0.107, 0.079, 0.041], [1, 1, 0.45]),
+        addLowPolySphere(faceRoot, 0.017, noseMaterial, [0, -0.006, 0.024], [0.8, 1, 0.2]),
+        addMesh(faceRoot, new THREE.BoxGeometry(0.076, 0.018, 0.016), mouthMaterial, [0, -0.092, 0.026], [
+          0,
+          0,
+          0
+        ]),
+        addLowPolySphere(faceRoot, 0.011, mouthMaterial, [-0.042, -0.089, 0.032], [1, 0.9, 0.22]),
+        addLowPolySphere(faceRoot, 0.011, mouthMaterial, [0.042, -0.089, 0.032], [1, 0.9, 0.22]),
+        addLowPolySphere(faceRoot, 0.034, blushMaterial, [-0.164, -0.028, 0.021], [1.28, 0.72, 0.16]),
+        addLowPolySphere(faceRoot, 0.034, blushMaterial, [0.164, -0.028, 0.021], [1.28, 0.72, 0.16])
+      ];
+      for (const mesh of faceMeshes) {
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+      }
     };
-    addFace(0.315, 0);
-    addFace(-0.315, Math.PI);
+    addFace(0.305, 0);
+
+    const addSideFace = (x: number, yaw: number): void => {
+      const faceRoot = new THREE.Group();
+      faceRoot.position.set(x, 0, 0);
+      faceRoot.rotation.y = yaw;
+      head.add(faceRoot);
+      const faceMeshes = [
+        addLowPolySphere(faceRoot, 0.034, eyeMaterial, [0.018, 0.058, 0.022], [0.6, 1, 0.18]),
+        addLowPolySphere(faceRoot, 0.012, faceHighlightMaterial, [0.03, 0.076, 0.036], [1, 1, 0.45]),
+        addLowPolySphere(faceRoot, 0.029, blushMaterial, [0.014, -0.03, 0.02], [1.2, 0.72, 0.16]),
+        addMesh(faceRoot, new THREE.BoxGeometry(0.05, 0.016, 0.014), mouthMaterial, [0.002, -0.085, 0.024], [
+          0,
+          0,
+          0
+        ])
+      ];
+      for (const mesh of faceMeshes) {
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+      }
+    };
+    addSideFace(0.31, Math.PI / 2);
+    addSideFace(-0.31, -Math.PI / 2);
 
     for (const [side, pigtail] of [
       [-1, leftPigtail],
       [1, rightPigtail]
     ] as const) {
-      addLowPolySphere(pigtail, 0.2, hairMaterial, [side * 0.06, -0.05, 0], [0.8, 1.16, 0.88]);
-      addLowPolySphere(pigtail, 0.16, hairHighlightMaterial, [side * 0.13, -0.26, 0], [0.74, 1.12, 0.82]);
-      addCapsule(pigtail, 0.058, 0.22, hairMaterial, [side * 0.18, -0.43, 0], [0, 0, side * 0.18]);
-      addMesh(pigtail, new THREE.BoxGeometry(0.11, 0.12, 0.07), ribbonMaterial, [side * -0.03, 0.09, 0.22], [
-        0,
-        0.2,
-        side * 0.55
+      addCapsule(pigtail, 0.056, 0.16, hairMaterial, [side * 0.004, 0.07, -0.012], [
+        0.14,
+        side * 0.08,
+        side * 0.05
+      ], [
+        0.86,
+        1,
+        0.72
       ]);
-      addMesh(pigtail, new THREE.BoxGeometry(0.11, 0.12, 0.07), ribbonMaterial, [side * -0.03, 0.09, -0.22], [
+      addLowPolySphere(pigtail, 0.136, hairMaterial, [side * 0.018, -0.04, 0], [0.64, 1.08, 0.74]);
+      addLowPolySphere(pigtail, 0.112, hairHighlightMaterial, [side * 0.068, -0.23, 0], [0.6, 1.06, 0.68]);
+      addLowPolySphere(pigtail, 0.088, hairMaterial, [side * 0.11, -0.38, 0], [0.56, 1.02, 0.62]);
+      addCapsule(pigtail, 0.032, 0.2, hairDeepMaterial, [side * 0.13, -0.5, 0], [0, 0, side * 0.18]);
+      addMesh(pigtail, new THREE.TorusGeometry(0.054, 0.009, 5, 10), hairTieMaterial, [side * 0.008, 0.055, 0], [
+        Math.PI / 2,
         0,
-        -0.2,
-        side * 0.55
-      ]);
+        0
+      ], [0.8, 0.8, 0.8]);
     }
 
     this.animateRig(0, false);

@@ -73,6 +73,27 @@ const assets = [
     kind: 'coin'
   },
   {
+    name: 'school_ground_floor',
+    prompt:
+      'seamless tan dirt and sand Japanese elementary school sports ground texture, compacted soil, subtle pebbles and chalk dust, cheerful storybook game style, tileable, no text',
+    palette: ['#d2ad6b', '#b88f4f', '#f6dfaa'],
+    kind: 'ground'
+  },
+  {
+    name: 'genkan_doma_floor',
+    prompt:
+      'seamless gray beige concrete tile doma floor texture for a Japanese school entrance, lightly dusty and scuffed, cheerful storybook game style, tileable, no text',
+    palette: ['#bdb4a4', '#928a7c', '#e3ded2'],
+    kind: 'doma'
+  },
+  {
+    name: 'art_supply_shelf',
+    prompt:
+      'front texture of a Japanese elementary school art supply shelf with cubbies, colored paper, paint bottles, brushes, crayons, cheerful storybook game style, no readable text',
+    palette: ['#ffcf4d', '#c89458', '#68c7e8'],
+    kind: 'artShelf'
+  },
+  {
     name: 'cpu_character',
     prompt:
       'friendly rival child explorer outfit texture, cheerful, non-realistic, storybook game style, no text',
@@ -217,6 +238,29 @@ function svgBody(kind, a, b, c) {
     return range(9)
       .map((i) => `<path d="M${i * 64} 0 V512 M0 ${i * 64} H512" stroke="${b}" stroke-width="6" opacity="0.5"/>`)
       .join('\n  ');
+  }
+  if (kind === 'ground') {
+    return `${range(34)
+      .map((i) => `<circle cx="${24 + ((i * 83) % 470)}" cy="${28 + ((i * 59) % 456)}" r="${2 + (i % 5)}" fill="${i % 2 ? b : c}" opacity="0.52"/>`)
+      .join('\n  ')}
+  ${range(14)
+    .map((i) => `<path d="M${(i * 71) % 512} ${(i * 43) % 512} C ${70 + ((i * 37) % 380)} ${28 + ((i * 67) % 456)}, ${120 + ((i * 79) % 360)} ${40 + ((i * 31) % 430)}, ${512 - ((i * 29) % 230)} ${18 + ((i * 47) % 470)}" stroke="${i % 2 ? b : c}" stroke-width="${5 + (i % 4) * 2}" fill="none" opacity="0.18"/>`)
+    .join('\n  ')}`;
+  }
+  if (kind === 'doma') {
+    return `${range(6)
+      .map((i) => `<path d="M${i * 96 + 32} 0 V512 M0 ${i * 96 + 32} H512" stroke="${b}" stroke-width="8" opacity="0.36"/>`)
+      .join('\n  ')}
+  ${range(28)
+    .map((i) => `<circle cx="${28 + ((i * 91) % 456)}" cy="${38 + ((i * 53) % 438)}" r="${2 + (i % 4)}" fill="${i % 2 ? b : c}" opacity="0.34"/>`)
+    .join('\n  ')}`;
+  }
+  if (kind === 'artShelf') {
+    return `<rect x="50" y="42" width="412" height="428" rx="22" fill="${a}"/>
+  ${range(4).map((i) => `<rect x="78" y="${92 + i * 84}" width="356" height="14" fill="${b}" opacity="0.72"/>`).join('\n  ')}
+  ${range(5).map((i) => `<rect x="${100 + i * 65}" y="62" width="12" height="380" fill="${b}" opacity="0.55"/>`).join('\n  ')}
+  ${range(30).map((i) => `<rect x="${92 + (i % 6) * 58}" y="${72 + Math.floor(i / 6) * 74}" width="${20 + (i % 4) * 5}" height="${28 + (i % 3) * 8}" rx="5" fill="${[b, c, '#9be8cf', '#ff7b53', '#fff7c7'][i % 5]}" opacity="0.92"/>`).join('\n  ')}
+  ${range(10).map((i) => `<path d="M${104 + i * 34} 394 L${116 + i * 34} 338" stroke="${[c, '#ff7b53', '#6bcf9d'][i % 3]}" stroke-width="8" stroke-linecap="round"/>`).join('\n  ')}`;
   }
   if (kind === 'treasure') {
     return `<rect x="74" y="198" width="364" height="218" rx="28" fill="${b}"/>

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { distance2, resolveMove } from './Collision';
+import { distance2, isBlocked, resolveMove } from './Collision';
 import { makeTextSprite, spriteMaterial } from './Assets';
 import type { Bounds, CPUState, Interactable, Vec2 } from './types';
 
@@ -18,6 +18,7 @@ type CPUContext = {
   coinGoal: number;
   treasureDelay: number;
   treasureHints: number;
+  waypoints?: Vec2[];
 };
 
 export class CPU {
@@ -116,7 +117,7 @@ export class CPU {
   private chooseNextGoal(context: CPUContext, events: CPUEvent[]): void {
     if (context.elapsed > context.treasureDelay && this.coins >= context.coinGoal && this.hints >= context.treasureHints) {
       this.setState('goToTreasure', events);
-      this.setPathTo(context.treasurePosition);
+      this.setPathTo(context.treasurePosition, context);
       return;
     }
 
@@ -128,7 +129,7 @@ export class CPU {
     if (this.hints < context.treasureHints && hints.length > 0 && Math.random() < 0.52) {
       const target = hints[Math.floor(Math.random() * hints.length)];
       this.setState('goToHint', events);
-      this.setPathTo(target.position);
+      this.setPathTo(target.position, context);
       return;
     }
 
@@ -137,7 +138,7 @@ export class CPU {
       const pool = unvisited.length > 0 ? unvisited : games;
       const target = pool[Math.floor(Math.random() * pool.length)];
       this.setState('playMiniGame', events);
-      this.setPathTo(target.position);
+      this.setPathTo(target.position, context);
       return;
     }
 
@@ -145,7 +146,7 @@ export class CPU {
     this.setPathTo({
       x: context.houseBounds.xMin + 2 + Math.random() * (context.houseBounds.xMax - context.houseBounds.xMin - 4),
       z: context.houseBounds.zMin + 2 + Math.random() * (context.houseBounds.zMax - context.houseBounds.zMin - 4)
-    });
+    }, context);
   }
 
   private moveAlongPath(dt: number, context: CPUContext, events: CPUEvent[]): void {
@@ -179,8 +180,13 @@ export class CPU {
     if (distance2(this.position, this.lastPosition) < 0.0002) {
       this.stuckTimer += dt;
       if (this.stuckTimer > 1.2) {
-        this.path = this.path.slice(-1);
-        this.path.unshift({ x: 0, z: 5 }, { x: 0, z: 0.5 });
+        const finalTarget = this.path[this.path.length - 1] ?? target;
+        if (context.waypoints?.length) {
+          this.setPathTo(finalTarget, context);
+        } else {
+          this.path = this.path.slice(-1);
+          this.path.unshift({ x: 0, z: 5 }, { x: 0, z: 0.5 });
+        }
         this.stuckTimer = 0;
       }
     } else {
@@ -235,7 +241,13 @@ export class CPU {
     }
   }
 
-  private setPathTo(target: Vec2): void {
+  private setPathTo(target: Vec2, context?: CPUContext): void {
+    const waypointPath = context?.waypoints?.length ? this.planWaypointPath(target, context) : null;
+    if (waypointPath) {
+      this.path = waypointPath;
+      return;
+    }
+
     const path: Vec2[] = [];
     const hubUpper = { x: 0, z: 5 };
     const hubDoor = { x: 0, z: 0.5 };
@@ -250,6 +262,86 @@ export class CPU {
 
     path.push(target);
     this.path = path;
+  }
+
+  private planWaypointPath(target: Vec2, context: CPUContext): Vec2[] | null {
+    if (this.segmentIsClear(this.position, target, context)) {
+      return [target];
+    }
+
+    const points = [this.position, ...context.waypoints!, target];
+    const targetIndex = points.length - 1;
+    const distances = new Array<number>(points.length).fill(Number.POSITIVE_INFINITY);
+    const previous = new Array<number>(points.length).fill(-1);
+    const visited = new Array<boolean>(points.length).fill(false);
+    const edges = new Map<number, Array<[number, number]>>();
+
+    for (let i = 0; i < points.length; i += 1) {
+      for (let j = i + 1; j < points.length; j += 1) {
+        if (!this.segmentIsClear(points[i], points[j], context)) {
+          continue;
+        }
+        const cost = Math.sqrt(distance2(points[i], points[j]));
+        edges.set(i, [...(edges.get(i) ?? []), [j, cost]]);
+        edges.set(j, [...(edges.get(j) ?? []), [i, cost]]);
+      }
+    }
+
+    distances[0] = 0;
+    for (let step = 0; step < points.length; step += 1) {
+      let current = -1;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < points.length; i += 1) {
+        if (!visited[i] && distances[i] < bestDistance) {
+          current = i;
+          bestDistance = distances[i];
+        }
+      }
+
+      if (current === -1 || current === targetIndex) {
+        break;
+      }
+
+      visited[current] = true;
+      for (const [next, cost] of edges.get(current) ?? []) {
+        const nextDistance = distances[current] + cost;
+        if (nextDistance < distances[next]) {
+          distances[next] = nextDistance;
+          previous[next] = current;
+        }
+      }
+    }
+
+    if (!Number.isFinite(distances[targetIndex])) {
+      return null;
+    }
+
+    const path: Vec2[] = [];
+    for (let index = targetIndex; index > 0; index = previous[index]) {
+      if (index === -1) {
+        return null;
+      }
+      path.unshift(points[index]);
+    }
+    return path;
+  }
+
+  private segmentIsClear(from: Vec2, to: Vec2, context: CPUContext): boolean {
+    const length = Math.sqrt(distance2(from, to));
+    const steps = Math.max(1, Math.ceil(length / 0.45));
+
+    for (let i = 1; i <= steps; i += 1) {
+      const t = i / steps;
+      const point = {
+        x: from.x + (to.x - from.x) * t,
+        z: from.z + (to.z - from.z) * t
+      };
+      if (isBlocked(point, this.radius, context.colliders, context.houseBounds)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private addStatusLabels(): void {
