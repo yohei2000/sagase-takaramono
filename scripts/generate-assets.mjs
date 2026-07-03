@@ -106,13 +106,6 @@ const assets = [
       'front texture of a Japanese elementary school art supply shelf with cubbies, colored paper, paint bottles, brushes, crayons, cheerful storybook game style, no readable text',
     palette: ['#ffcf4d', '#c89458', '#68c7e8'],
     kind: 'artShelf'
-  },
-  {
-    name: 'cpu_character',
-    prompt:
-      'friendly rival child explorer outfit texture, cheerful, non-realistic, storybook game style, no text',
-    palette: ['#7dc7ff', '#ffcf4d', '#ffffff'],
-    kind: 'outfit'
   }
 ];
 

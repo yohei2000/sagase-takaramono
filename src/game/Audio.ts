@@ -39,12 +39,6 @@ export class GameAudio {
     });
   }
 
-  lose(): void {
-    [440, 392, 349].forEach((frequency, index) => {
-      this.playTone(frequency, 0.18, 'sine', index * 0.16, 0.1);
-    });
-  }
-
   private playTone(
     frequency: number,
     duration: number,

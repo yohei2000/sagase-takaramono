@@ -15,8 +15,6 @@ export class UI {
   private readonly stageTitle = requireElement<HTMLElement>('stage-title');
   private readonly coinCount = requireElement<HTMLElement>('coin-count');
   private readonly coinGoal = requireElement<HTMLElement>('coin-goal');
-  private readonly cpuCoinCount = requireElement<HTMLElement>('cpu-coin-count');
-  private readonly cpuStatus = requireElement<HTMLElement>('cpu-status');
   private readonly hintLeft = requireElement<HTMLElement>('hint-left');
   private readonly hintList = requireElement<HTMLUListElement>('hint-list');
   private readonly prompt = requireElement<HTMLElement>('interact-prompt');
@@ -129,22 +127,15 @@ export class UI {
     this.renderStageCards(stages);
   }
 
-  showEnd(kind: 'win' | 'lose', stage: StageDefinition, nextStageId: StageId | null): void {
+  showEnd(stage: StageDefinition, nextStageId: StageId | null): void {
     this.hud.classList.add('is-hidden');
     this.endScreen.classList.remove('is-hidden');
-    if (kind === 'win') {
-      this.endKicker.textContent = 'クリア！';
-      this.endTitle.textContent = `${stage.shortTitle}を クリア！`;
-      this.endMessage.textContent = nextStageId
-        ? `ステージ${nextStageId}が あそべるように なったよ。`
-        : 'ぜんぶの たからものを みつけたね。';
-      this.nextStageButton.classList.toggle('is-hidden', nextStageId === null);
-    } else {
-      this.endKicker.textContent = 'もういちど ちょうせん！';
-      this.endTitle.textContent = 'CPUが さきに あけたよ';
-      this.endMessage.textContent = 'つぎは ヒントと コインを もっと はやく あつめよう。';
-      this.nextStageButton.classList.add('is-hidden');
-    }
+    this.endKicker.textContent = 'クリア！';
+    this.endTitle.textContent = `${stage.shortTitle}を クリア！`;
+    this.endMessage.textContent = nextStageId
+      ? `ステージ${nextStageId}が あそべるように なったよ。`
+      : 'ぜんぶの たからものを みつけたね。';
+    this.nextStageButton.classList.toggle('is-hidden', nextStageId === null);
   }
 
   private renderStageCards(stages: StageSelectItem[]): void {
@@ -183,7 +174,6 @@ export class UI {
     this.stageTitle.textContent = state.stageTitle;
     this.coinCount.textContent = state.coins.toString().padStart(2, '0');
     this.coinGoal.textContent = state.coinGoal.toString();
-    this.cpuCoinCount.textContent = state.cpuCoins.toString().padStart(2, '0');
     this.hintLeft.textContent = Math.max(0, state.hintsTotal - state.hints.length).toString();
     this.hintList.innerHTML = '';
     for (const hint of state.hints) {
@@ -191,10 +181,6 @@ export class UI {
       item.textContent = hint;
       this.hintList.append(item);
     }
-  }
-
-  setCpuStatus(label: string): void {
-    this.cpuStatus.textContent = label;
   }
 
   setPrompt(label: string | null): void {
@@ -219,7 +205,7 @@ export class UI {
     }, timeout);
   }
 
-  showReward(amount: number, variant: 'player' | 'cpu' | 'treasure' = 'player'): void {
+  showReward(amount: number, variant: 'player' | 'treasure' = 'player'): void {
     const popup = document.createElement('div');
     popup.className = `reward-popup reward-popup-${variant}`;
     popup.textContent = variant === 'treasure' ? 'やった！' : `+${amount}`;
@@ -227,7 +213,7 @@ export class UI {
     window.setTimeout(() => popup.remove(), 1300);
   }
 
-  drawMinimap(player: Vec2, cpu: Vec2, bounds: Bounds): void {
+  drawMinimap(player: Vec2, bounds: Bounds): void {
     const context = this.minimap.getContext('2d');
     if (!context) {
       return;
@@ -259,7 +245,6 @@ export class UI {
     }
     context.stroke();
 
-    drawDot(context, mapX(cpu.x), mapZ(cpu.z), '#4aa8ff', 'C');
     drawDot(context, mapX(player.x), mapZ(player.z), '#ff7b53', 'P');
   }
 }

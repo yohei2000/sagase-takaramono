@@ -9,7 +9,6 @@ export class World {
   readonly stage: StageDefinition;
   readonly houseBounds: Bounds;
   readonly playerStart: Vec2;
-  readonly cpuStart: Vec2;
   readonly treasurePosition: Vec2;
 
   private treasureLid: THREE.Group | null = null;
@@ -25,7 +24,6 @@ export class World {
     this.stage = stage;
     this.houseBounds = stage.bounds;
     this.playerStart = { ...stage.playerStart };
-    this.cpuStart = { ...stage.cpuStart };
     this.treasurePosition = { ...stage.treasurePosition };
     this.group.name = `stage-${stage.id}-world`;
     scene.add(this.group);
@@ -402,16 +400,31 @@ export class World {
     this.group.add(mesh);
 
     if (collider) {
+      const inset = this.colliderInset(width, depth, height);
+      const halfWidth = Math.max(0.04, width / 2 - inset.x);
+      const halfDepth = Math.max(0.04, depth / 2 - inset.z);
       this.colliders.push({
-        xMin: x - width / 2,
-        xMax: x + width / 2,
-        zMin: z - depth / 2,
-        zMax: z + depth / 2,
+        xMin: x - halfWidth,
+        xMax: x + halfWidth,
+        zMin: z - halfDepth,
+        zMax: z + halfDepth,
         label
       });
     }
 
     return mesh;
+  }
+
+  private colliderInset(width: number, depth: number, height: number): { x: number; z: number } {
+    if (height > 1.25) {
+      return { x: 0, z: 0 };
+    }
+
+    const maxInset = height <= 0.85 ? 0.1 : 0.06;
+    return {
+      x: Math.min(maxInset, width * 0.18),
+      z: Math.min(maxInset, depth * 0.18)
+    };
   }
 
   private addDetailBox(
@@ -508,7 +521,7 @@ export class World {
     leaves.castShadow = true;
     this.group.add(leaves);
 
-    this.colliders.push({ xMin: x - 0.55, xMax: x + 0.55, zMin: z - 0.55, zMax: z + 0.55, label: 'かんようしょくぶつ' });
+    this.colliders.push({ xMin: x - 0.38, xMax: x + 0.38, zMin: z - 0.38, zMax: z + 0.38, label: 'かんようしょくぶつ' });
   }
 
   private createStarGeometry(outerRadius: number, innerRadius: number): THREE.ShapeGeometry {

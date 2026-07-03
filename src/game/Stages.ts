@@ -11,7 +11,6 @@ export const STAGES: StageDefinition[] = [
     coinGoal: 60,
     bounds: { xMin: -16.65, xMax: 16.65, zMin: -12.65, zMax: 12.65 },
     playerStart: { x: -10.2, z: 7.2 },
-    cpuStart: { x: 8.8, z: -7.2 },
     treasurePosition: { x: -12.1, z: -5.1 },
     treasureRevealHints: 3,
     treasurePromptHints: 2,
@@ -22,7 +21,6 @@ export const STAGES: StageDefinition[] = [
     fogNear: 26,
     fogFar: 58,
     boundaryHeight: 2.45,
-    cpu: { treasureDelay: 100, treasureHints: 4, speed: 2.05 },
     hints: [
       { id: 'hint-genkan', position: { x: -9.5, z: 6.8 }, text: 'たからは こどもべやの ちかく' },
       { id: 'hint-living', position: { x: -0.6, z: 4.1 }, text: 'ほんが たくさん あるところ' },
@@ -39,9 +37,9 @@ export const STAGES: StageDefinition[] = [
       { id: 'mini-desk', position: { x: -6.25, z: -8.55 }, kind: 'timing', label: 'きらきら' },
       { id: 'mini-order-playroom', position: { x: -13.95, z: -3.15 }, kind: 'order', label: 'じゅんばん' },
       { id: 'mini-color-bath', position: { x: 13.55, z: 6.8 }, kind: 'color', label: 'いろ' },
-      { id: 'mini-memory-storage', position: { x: 0.2, z: -10.95 }, kind: 'memory', label: 'おぼえる' },
-      { id: 'mini-find-bedroom', position: { x: 12.9, z: -9.45 }, kind: 'find', label: 'さがす' },
-      { id: 'mini-addition-entry', position: { x: -14.3, z: 8.35 }, kind: 'addition', label: 'たしざん' }
+      { id: 'mini-memory-storage', position: { x: 0.2, z: -10.95 }, kind: 'count', label: 'かず' },
+      { id: 'mini-find-bedroom', position: { x: 12.9, z: -9.45 }, kind: 'color', label: 'いろ' },
+      { id: 'mini-addition-entry', position: { x: -14.3, z: 8.35 }, kind: 'order', label: 'じゅんばん' }
     ]
   },
   {
@@ -54,7 +52,6 @@ export const STAGES: StageDefinition[] = [
     coinGoal: 65,
     bounds: { xMin: -21.2, xMax: 21.4, zMin: -13.2, zMax: 13.4 },
     playerStart: { x: 7.2, z: -10.4 },
-    cpuStart: { x: 16.8, z: -10.9 },
     treasurePosition: { x: 8.4, z: 9.5 },
     treasureRevealHints: 4,
     treasurePromptHints: 3,
@@ -67,40 +64,6 @@ export const STAGES: StageDefinition[] = [
     fogNear: 28,
     fogFar: 66,
     boundaryHeight: 1.85,
-    cpu: {
-      treasureDelay: 116,
-      treasureHints: 4,
-      speed: 2.12,
-      waypoints: [
-        { x: -18.3, z: 1.2 },
-        { x: -12.0, z: 1.2 },
-        { x: -6.1, z: 1.2 },
-        { x: 0.0, z: 1.2 },
-        { x: 6.2, z: 1.2 },
-        { x: 12.4, z: 1.2 },
-        { x: 17.3, z: 1.2 },
-        { x: -16.0, z: 3.25 },
-        { x: -16.0, z: 5.0 },
-        { x: -6.45, z: 3.25 },
-        { x: -6.45, z: 5.0 },
-        { x: 4.5, z: 3.25 },
-        { x: 4.5, z: 5.0 },
-        { x: 13.6, z: 3.25 },
-        { x: 13.6, z: 5.0 },
-        { x: -16.4, z: -1.55 },
-        { x: -16.4, z: -4.0 },
-        { x: -8.0, z: -1.55 },
-        { x: -8.0, z: -4.0 },
-        { x: -0.1, z: -1.55 },
-        { x: -0.1, z: -4.0 },
-        { x: 7.2, z: -1.55 },
-        { x: 7.2, z: -4.0 },
-        { x: 7.2, z: -9.6 },
-        { x: 12.7, z: -6.6 },
-        { x: 16.6, z: -6.6 },
-        { x: 16.8, z: -10.6 }
-      ]
-    },
     areas: [
       { label: '1ねん', x: -15.95, z: 8.45, width: 9.1, depth: 8.3, color: 0xfff4c2, texture: 'school_classroom_floor', repeat: [3, 3], opacity: 0.98 },
       { label: '2ねん', x: -6.45, z: 8.45, width: 9.1, depth: 8.3, color: 0xfff0bc, texture: 'school_classroom_floor', repeat: [3, 3], opacity: 0.98 },
@@ -283,9 +246,9 @@ export const STAGES: StageDefinition[] = [
       { id: 's2-mini-kana', position: { x: -18.25, z: -9.6 }, kind: 'kana', label: 'ひらがな' },
       { id: 's2-mini-count', position: { x: -0.15, z: -4.15 }, kind: 'count', label: 'かず' },
       { id: 's2-mini-timing', position: { x: 16.75, z: -7.45 }, kind: 'timing', label: 'きらきら' },
-      { id: 's2-mini-difference', position: { x: 13.5, z: 5.55 }, kind: 'difference', label: 'ちがい' },
+      { id: 's2-mini-difference', position: { x: 13.5, z: 5.55 }, kind: 'memory', label: 'おぼえる' },
       { id: 's2-mini-addition', position: { x: 7.2, z: -4.65 }, kind: 'addition', label: 'たしざん' },
-      { id: 's2-mini-sound', position: { x: 0.0, z: 1.3 }, kind: 'sound', label: 'おと' }
+      { id: 's2-mini-sound', position: { x: 0.0, z: 1.3 }, kind: 'compare', label: 'くらべる' }
     ]
   },
   {
@@ -298,7 +261,6 @@ export const STAGES: StageDefinition[] = [
     coinGoal: 75,
     bounds: { xMin: -25, xMax: 25, zMin: -18, zMax: 18 },
     playerStart: { x: 0.0, z: -16.4 },
-    cpuStart: { x: 20.2, z: 13.1 },
     treasurePosition: { x: -18.2, z: -14.2 },
     treasureRevealHints: 4,
     treasurePromptHints: 3,
@@ -309,29 +271,6 @@ export const STAGES: StageDefinition[] = [
     fogNear: 38,
     fogFar: 88,
     boundaryHeight: 1.05,
-    cpu: {
-      treasureDelay: 145,
-      treasureHints: 5,
-      speed: 2.12,
-      waypoints: [
-        { x: 0.0, z: -16.0 },
-        { x: -10.8, z: -16.0 },
-        { x: -19.4, z: -13.4 },
-        { x: -21.0, z: -6.0 },
-        { x: -21.0, z: 2.8 },
-        { x: -18.4, z: 10.0 },
-        { x: -6.0, z: 10.2 },
-        { x: 0.0, z: 4.1 },
-        { x: 6.4, z: 10.0 },
-        { x: 16.2, z: 10.0 },
-        { x: 21.0, z: 3.2 },
-        { x: 21.0, z: -7.4 },
-        { x: 15.0, z: -13.2 },
-        { x: 5.2, z: -15.7 },
-        { x: 0.0, z: -4.0 },
-        { x: -8.2, z: -4.8 }
-      ]
-    },
     areas: [
       { label: 'すべりだいの すなマット', x: -16.2, z: 10.4, width: 13.5, depth: 9.4, color: 0xf6d789, texture: 'park_sand_floor', repeat: [3, 2], opacity: 0.98 },
       { label: 'ブランコの あんぜんマット', x: 0.2, z: 10.4, width: 11.0, depth: 8.6, color: 0x78b65d, opacity: 0.62 },
@@ -466,10 +405,10 @@ export const STAGES: StageDefinition[] = [
       { id: 's3-mini-swing-difference', position: { x: 4.4, z: 8.6 }, kind: 'difference', label: 'ちがい' },
       { id: 's3-mini-water-sound', position: { x: 20.6, z: 8.4 }, kind: 'sound', label: 'おと' },
       { id: 's3-mini-sandbox-count', position: { x: -19.2, z: -7.6 }, kind: 'count', label: 'かず' },
-      { id: 's3-mini-grove-memory', position: { x: -10.2, z: -14.2 }, kind: 'memory', label: 'おぼえる' },
+      { id: 's3-mini-grove-memory', position: { x: -10.2, z: -14.2 }, kind: 'numberMemory', label: 'すうじ' },
       { id: 's3-mini-plaza-sequence', position: { x: -3.8, z: -4.2 }, kind: 'sequence', label: 'つぎ' },
       { id: 's3-mini-plaza-addition', position: { x: 4.8, z: -4.8 }, kind: 'addition', label: 'たしざん' },
-      { id: 's3-mini-flower-color', position: { x: 14.4, z: -7.8 }, kind: 'color', label: 'いろ' },
+      { id: 's3-mini-flower-color', position: { x: 14.4, z: -7.8 }, kind: 'quiz', label: 'クイズ' },
       { id: 's3-mini-flower-kana', position: { x: 18.5, z: -12.0 }, kind: 'kana', label: 'ひらがな' }
     ]
   },
@@ -483,7 +422,6 @@ export const STAGES: StageDefinition[] = [
     coinGoal: 85,
     bounds: { xMin: -24, xMax: 24, zMin: -18, zMax: 18 },
     playerStart: { x: -19.6, z: -14.2 },
-    cpuStart: { x: 18.2, z: 13.2 },
     treasurePosition: { x: 20.6, z: -12.2 },
     treasureRevealHints: 5,
     treasurePromptHints: 4,
@@ -496,27 +434,6 @@ export const STAGES: StageDefinition[] = [
     fogNear: 34,
     fogFar: 82,
     boundaryHeight: 2.15,
-    cpu: {
-      treasureDelay: 150,
-      treasureHints: 5,
-      speed: 2.24,
-      waypoints: [
-        { x: -19.0, z: -13.0 },
-        { x: -12.0, z: -13.0 },
-        { x: -12.0, z: -3.0 },
-        { x: -12.0, z: 6.0 },
-        { x: -12.0, z: 13.0 },
-        { x: -5.6, z: -12.0 },
-        { x: -5.6, z: 0.0 },
-        { x: -5.6, z: 12.0 },
-        { x: 4.6, z: -12.0 },
-        { x: 4.6, z: 0.0 },
-        { x: 4.6, z: 12.0 },
-        { x: 18.8, z: -12.0 },
-        { x: 18.8, z: 0.0 },
-        { x: 18.8, z: 12.0 }
-      ]
-    },
     areas: [
       { label: 'トイレ', x: -18.4, z: 13.0, width: 9.2, depth: 5.3, color: 0xcfeeff, texture: 'school_hall_floor', repeat: [2, 2], opacity: 0.97 },
       { label: '更衣室', x: -18.4, z: 7.2, width: 9.2, depth: 5.3, color: 0xdff1c8, texture: 'school_hall_floor', repeat: [2, 2], opacity: 0.97 },
@@ -592,11 +509,7 @@ export const STAGES: StageDefinition[] = [
       { label: 'ボール1', x: -8.2, z: 10.0, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 },
       { label: 'ボール2', x: 20.4, z: 10.0, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 },
       { label: 'ボール3', x: -8.2, z: -12.1, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 },
-      { label: 'ボール4', x: 20.6, z: -12.2, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 },
-
-
-
-
+      { label: 'ボール4', x: 20.6, z: -12.2, width: 0.28, depth: 0.28, height: 0.28, color: 0xffdf32, shape: 'sphere', collider: false, y: 0.86 }
     ],
     labels: [
       { text: 'トイレ', x: -18.4, z: 15.25, background: '#cfeeff' },
@@ -619,16 +532,16 @@ export const STAGES: StageDefinition[] = [
     ],
     miniSpots: [
       { id: 's4-mini-reception-kana', position: { x: -21.0, z: -12.9 }, kind: 'kana', label: 'ひらがな' },
-      { id: 's4-mini-waiting-memory', position: { x: -16.0, z: -1.0 }, kind: 'memory', label: 'おぼえる' },
+      { id: 's4-mini-waiting-memory', position: { x: -16.0, z: -1.0 }, kind: 'numberMemory', label: 'すうじ' },
       { id: 's4-mini-locker-sequence', position: { x: -21.0, z: 6.3 }, kind: 'sequence', label: 'つぎ' },
-      { id: 's4-mini-toilet-shape', position: { x: -16.0, z: 14.1 }, kind: 'shape', label: 'かたち' },
+      { id: 's4-mini-toilet-shape', position: { x: -16.0, z: 14.1 }, kind: 'quiz', label: 'クイズ' },
       { id: 's4-mini-court1-find', position: { x: -6.0, z: 10.0 }, kind: 'find', label: 'さがす' },
       { id: 's4-mini-court1-timing', position: { x: 1.5, z: 5.0 }, kind: 'timing', label: 'きらきら' },
-      { id: 's4-mini-court1-color', position: { x: -5.9, z: -6.5 }, kind: 'color', label: 'いろ' },
+      { id: 's4-mini-court1-color', position: { x: -5.9, z: -6.5 }, kind: 'compare', label: 'くらべる' },
       { id: 's4-mini-center-sound', position: { x: 4.9, z: 5.4 }, kind: 'sound', label: 'おと' },
       { id: 's4-mini-court2-difference', position: { x: 8.4, z: 9.6 }, kind: 'difference', label: 'ちがい' },
-      { id: 's4-mini-court2-addition', position: { x: 15.7, z: 3.8 }, kind: 'addition', label: 'たしざん' },
-      { id: 's4-mini-court2-order', position: { x: 18.6, z: -10.2 }, kind: 'order', label: 'じゅんばん' }
+      { id: 's4-mini-court2-addition', position: { x: 15.7, z: 3.8 }, kind: 'subtraction', label: 'ひきざん' },
+      { id: 's4-mini-court2-order', position: { x: 18.6, z: -10.2 }, kind: 'route', label: 'みち' }
     ]
   },
   {
@@ -641,7 +554,6 @@ export const STAGES: StageDefinition[] = [
     coinGoal: 95,
     bounds: { xMin: -25, xMax: 25, zMin: -18, zMax: 18 },
     playerStart: { x: -19.5, z: 13.0 },
-    cpuStart: { x: 19.3, z: -12.4 },
     treasurePosition: { x: 17.3, z: 11.2 },
     treasureRevealHints: 5,
     treasurePromptHints: 4,
@@ -654,7 +566,6 @@ export const STAGES: StageDefinition[] = [
     fogNear: 38,
     fogFar: 92,
     boundaryHeight: 1.8,
-    cpu: { treasureDelay: 172, treasureHints: 6, speed: 2.3 },
     areas: [
       { label: 'スーパーまえ', x: -16.0, z: 9.8, width: 14, depth: 10, color: 0xe5f5ff, texture: 'shop_floor', repeat: [3, 2], opacity: 0.96 },
       { label: 'パンや', x: -1.0, z: 9.8, width: 12, depth: 10, color: 0xffefd2, texture: 'shop_floor', repeat: [3, 2], opacity: 0.96 },
@@ -730,7 +641,6 @@ const MALL_STAGE_5: StageDefinition = {
   coinGoal: 95,
   bounds: { xMin: -31, xMax: 31, zMin: -19, zMax: 19 },
   playerStart: { x: 18.8, z: -15.6 },
-  cpuStart: { x: -24.5, z: 15.6 },
   treasurePosition: { x: 25.0, z: 12.2 },
   treasureRevealHints: 5,
   treasurePromptHints: 4,
@@ -743,28 +653,6 @@ const MALL_STAGE_5: StageDefinition = {
   fogNear: 44,
   fogFar: 106,
   boundaryHeight: 1.8,
-  cpu: {
-    treasureDelay: 180,
-    treasureHints: 6,
-    speed: 2.3,
-    waypoints: [
-      { x: 18.8, z: -15.6 },
-      { x: 13.8, z: -11.4 },
-      { x: 7.0, z: -10.0 },
-      { x: 0.0, z: -9.2 },
-      { x: -10.0, z: -9.2 },
-      { x: -22.4, z: -8.0 },
-      { x: -24.0, z: 1.0 },
-      { x: -24.0, z: 10.4 },
-      { x: -12.0, z: 10.0 },
-      { x: -1.2, z: 10.0 },
-      { x: 7.4, z: 9.2 },
-      { x: 16.2, z: 10.0 },
-      { x: 25.0, z: 12.2 },
-      { x: 23.5, z: 2.4 },
-      { x: 18.5, z: -5.8 }
-    ]
-  },
   areas: [
     { label: 'スーパー', x: -22.6, z: 9.1, width: 16.8, depth: 15.0, color: 0xe6f4d7, texture: 'stage5_mall_corridor_floor', repeat: [4, 4], opacity: 0.98 },
     { label: 'ベーカリー', x: -3.8, z: 11.6, width: 8.8, depth: 7.0, color: 0xffefd2, texture: 'stage5_mall_corridor_floor', repeat: [3, 2], opacity: 0.98 },
@@ -951,16 +839,16 @@ const MALL_STAGE_5: StageDefinition = {
   ],
   miniSpots: [
     { id: 's5-mini-super-find', position: { x: -29.2, z: 5.4 }, kind: 'find', label: 'さがす' },
-    { id: 's5-mini-super-count', position: { x: -22.4, z: 1.4 }, kind: 'count', label: 'かず' },
+    { id: 's5-mini-super-count', position: { x: -22.4, z: 1.4 }, kind: 'compare', label: 'くらべる' },
     { id: 's5-mini-bakery-sequence', position: { x: -5.6, z: 8.2 }, kind: 'sequence', label: 'つぎ' },
-    { id: 's5-mini-cafe-sound', position: { x: 4.4, z: 8.2 }, kind: 'sound', label: 'おと' },
-    { id: 's5-mini-atrium-shape', position: { x: -6.8, z: -1.4 }, kind: 'shape', label: 'かたち' },
+    { id: 's5-mini-cafe-sound', position: { x: 4.4, z: 8.2 }, kind: 'quiz', label: 'クイズ' },
+    { id: 's5-mini-atrium-shape', position: { x: -6.8, z: -1.4 }, kind: 'route', label: 'みち' },
     { id: 's5-mini-atrium-add', position: { x: 7.0, z: 1.4 }, kind: 'addition', label: 'たしざん' },
-    { id: 's5-mini-book-memory', position: { x: 16.4, z: 9.8 }, kind: 'memory', label: 'おぼえる' },
+    { id: 's5-mini-book-memory', position: { x: 16.4, z: 9.8 }, kind: 'numberMemory', label: 'すうじ' },
     { id: 's5-mini-game-timing', position: { x: 23.0, z: 0.0 }, kind: 'timing', label: 'きらきら' },
     { id: 's5-mini-food-color', position: { x: -24.6, z: -15.1 }, kind: 'color', label: 'いろ' },
     { id: 's5-mini-food-kana', position: { x: -16.2, z: -8.0 }, kind: 'kana', label: 'ひらがな' },
-    { id: 's5-mini-kids-order', position: { x: 0.2, z: -13.0 }, kind: 'order', label: 'ならべる' },
+    { id: 's5-mini-kids-order', position: { x: 0.2, z: -13.0 }, kind: 'subtraction', label: 'ひきざん' },
     { id: 's5-mini-bus-difference', position: { x: 22.0, z: -15.4 }, kind: 'difference', label: 'ちがい' }
   ]
 };

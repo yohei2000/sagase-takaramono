@@ -26,7 +26,12 @@ export type MiniGameKind =
   | 'shape'
   | 'sequence'
   | 'sound'
-  | 'kana';
+  | 'kana'
+  | 'compare'
+  | 'subtraction'
+  | 'numberMemory'
+  | 'quiz'
+  | 'route';
 
 export type InteractableType = 'hint' | 'minigame' | 'treasure';
 
@@ -53,15 +58,12 @@ export type InputState = {
 export type HudState = {
   coins: number;
   coinGoal: number;
-  cpuCoins: number;
   hints: string[];
   hintsTotal: number;
   stageTitle: string;
 };
 
-export type GameMode = 'menu' | 'playing' | 'miniGame' | 'won' | 'lost';
-
-export type CPUState = 'wander' | 'goToHint' | 'playMiniGame' | 'goToTreasure' | 'openTreasure';
+export type GameMode = 'menu' | 'playing' | 'miniGame' | 'won';
 
 export type StageId = 1 | 2 | 3 | 4 | 5;
 
@@ -135,7 +137,6 @@ export type StageDefinition = {
   coinGoal: number;
   bounds: Bounds;
   playerStart: Vec2;
-  cpuStart: Vec2;
   treasurePosition: Vec2;
   treasureRevealHints: number;
   treasurePromptHints: number;
@@ -148,12 +149,6 @@ export type StageDefinition = {
   fogNear: number;
   fogFar: number;
   boundaryHeight: number;
-  cpu: {
-    treasureDelay: number;
-    treasureHints: number;
-    speed: number;
-    waypoints?: Vec2[];
-  };
   hints: StageHint[];
   miniSpots: StageMiniSpot[];
   areas?: StageArea[];

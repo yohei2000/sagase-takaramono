@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { CPU, type CPUEvent } from './CPU';
 import { distance2 } from './Collision';
 import { GameAudio } from './Audio';
 import { MiniGames } from './MiniGames';
@@ -39,7 +38,6 @@ export class Game {
   private readonly devMode = this.isDeveloperMode();
   private world!: World;
   private player!: Player;
-  private cpu!: CPU;
   private mode: GameMode = 'menu';
   private cameraYaw = Math.PI * 0.28;
   private dragging = false;
@@ -102,7 +100,6 @@ export class Game {
     this.mode = 'playing';
     this.createScene();
     this.ui.showGame();
-    this.ui.setCpuStatus('さがす');
     this.ui.updateHud(this.hudState());
     this.ui.showToast(`${this.stage.shortTitle}で たからさがし スタート！`);
   }
@@ -134,7 +131,6 @@ export class Game {
 
     this.world = new World(this.scene, this.stage);
     this.player = new Player(this.scene, this.world.playerStart);
-    this.cpu = new CPU(this.scene, this.world.cpuStart, this.stage.cpu.speed);
     this.sparkles.length = 0;
     this.updateCamera();
   }
@@ -205,26 +201,13 @@ export class Game {
     this.world.setTreasureGlowLevel(this.hints.length);
     this.ui.setPrompt(this.nearby ? 'しらべる' : null);
 
-    const events = this.cpu.update(dt, {
-      elapsed: this.elapsed,
-      interactables: this.world.interactables,
-      colliders: this.world.colliders,
-      houseBounds: this.world.houseBounds,
-      treasurePosition: this.world.treasurePosition,
-      coinGoal: this.stage.coinGoal,
-      treasureDelay: this.stage.cpu.treasureDelay,
-      treasureHints: this.stage.cpu.treasureHints,
-      waypoints: this.stage.cpu.waypoints
-    });
-    this.handleCPUEvents(events);
-
     if (this.elapsed >= this.nextGuideAt && this.mode === 'playing') {
       this.nextGuideAt += 24;
       this.showGuidanceMessage();
     }
 
     this.ui.updateHud(this.hudState());
-    this.ui.drawMinimap(this.player.position, this.cpu.position, this.world.houseBounds);
+    this.ui.drawMinimap(this.player.position, this.world.houseBounds);
   }
 
   private tryInteract(): void {
@@ -298,36 +281,7 @@ export class Game {
     this.ui.showReward(0, 'treasure');
     this.ui.showToast('やった！ たからばこが ひらいたよ！', 2300);
     this.audio.treasure();
-    window.setTimeout(() => this.ui.showEnd('win', this.stage, getNextStageId(this.stage.id)), 1700);
-  }
-
-  private handleCPUEvents(events: CPUEvent[]): void {
-    for (const event of events) {
-      if (event.type === 'coin') {
-        this.ui.showReward(event.amount, 'cpu');
-        this.ui.showToast(`CPUが コインを ${event.amount}まい もらったよ`, 1800);
-      }
-      if (event.type === 'hint') {
-        this.ui.showToast('CPUが ヒントを みつけたよ', 1800);
-      }
-      if (event.type === 'state') {
-        const status = this.cpuStateStatus(event.state);
-        if (status) {
-          this.ui.setCpuStatus(status);
-        }
-        const label = this.cpuStateToast(event.state);
-        if (label) {
-          this.ui.showToast(`CPUは ${label}`, event.state === 'goToTreasure' ? 2600 : 1600);
-        }
-      }
-      if (event.type === 'treasure' && this.mode === 'playing') {
-        this.mode = 'lost';
-        this.world.openTreasure();
-        this.spawnSparkles(this.world.treasurePosition, 110, 1.25);
-        this.audio.lose();
-        window.setTimeout(() => this.ui.showEnd('lose', this.stage, null), 1000);
-      }
-    }
+    window.setTimeout(() => this.ui.showEnd(this.stage, getNextStageId(this.stage.id)), 1700);
   }
 
   private findNearby(): Interactable | null {
@@ -374,8 +328,8 @@ export class Game {
     return {
       forward: this.touchInput.forward || this.keys.has('KeyW') || this.keys.has('ArrowUp'),
       back: this.touchInput.back || this.keys.has('KeyS') || this.keys.has('ArrowDown'),
-      left: this.touchInput.right || this.keys.has('KeyD') || this.keys.has('ArrowRight'),
-      right: this.touchInput.left || this.keys.has('KeyA') || this.keys.has('ArrowLeft')
+      left: this.touchInput.left || this.keys.has('KeyA') || this.keys.has('ArrowLeft'),
+      right: this.touchInput.right || this.keys.has('KeyD') || this.keys.has('ArrowRight')
     };
   }
 
@@ -383,7 +337,6 @@ export class Game {
     return {
       coins: this.coins,
       coinGoal: this.stage.coinGoal,
-      cpuCoins: this.cpu.coins,
       hints: this.hints,
       hintsTotal: this.stage.hints.length,
       stageTitle: this.stage.title
@@ -402,32 +355,6 @@ export class Game {
     }
 
     this.ui.showToast(this.stage.treasureClue, 4300);
-  }
-
-  private cpuStateStatus(state: string): string {
-    if (state === 'goToHint') {
-      return 'ヒントへ';
-    }
-    if (state === 'playMiniGame') {
-      return 'ゲーム中';
-    }
-    if (state === 'goToTreasure' || state === 'openTreasure') {
-      return 'たからへ';
-    }
-    return 'さがす';
-  }
-
-  private cpuStateToast(state: string): string {
-    if (state === 'goToHint') {
-      return 'ヒントへ いくよ';
-    }
-    if (state === 'playMiniGame') {
-      return 'ゲーム中';
-    }
-    if (state === 'goToTreasure' || state === 'openTreasure') {
-      return 'たからへ いくよ';
-    }
-    return '';
   }
 
   private showStageSelect(): void {

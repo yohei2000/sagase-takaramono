@@ -26,7 +26,7 @@ type RigBones = {
 
 export class Player {
   readonly group: THREE.Group;
-  readonly radius = 0.38;
+  readonly radius = 0.32;
   private readonly speed = 4.2;
   private readonly bones: RigBones;
   private readonly skeleton: THREE.Skeleton;
