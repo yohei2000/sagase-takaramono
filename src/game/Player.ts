@@ -2,6 +2,11 @@ import * as THREE from 'three';
 import { resolveMove } from './Collision';
 import type { Bounds, InputState, Vec2 } from './types';
 
+type MovementBasis = {
+  forward: Vec2;
+  right: Vec2;
+};
+
 type RigBones = {
   hips: THREE.Bone;
   spine: THREE.Bone;
@@ -751,7 +756,7 @@ export class Player {
     scene.add(this.group);
   }
 
-  update(dt: number, input: InputState, cameraYaw: number, colliders: Bounds[], houseBounds: Bounds): void {
+  update(dt: number, input: InputState, movementBasis: MovementBasis, colliders: Bounds[], houseBounds: Bounds): void {
     const direction = new THREE.Vector2(0, 0);
     if (input.forward) direction.y += 1;
     if (input.back) direction.y -= 1;
@@ -764,8 +769,8 @@ export class Player {
 
     if (moving) {
       direction.normalize();
-      const forward = new THREE.Vector2(Math.sin(cameraYaw), Math.cos(cameraYaw));
-      const right = new THREE.Vector2(Math.cos(cameraYaw), -Math.sin(cameraYaw));
+      const forward = new THREE.Vector2(movementBasis.forward.x, movementBasis.forward.z);
+      const right = new THREE.Vector2(movementBasis.right.x, movementBasis.right.z);
       const move = right.multiplyScalar(direction.x).add(forward.multiplyScalar(direction.y));
       const delta = { x: move.x * this.speed * dt, z: move.y * this.speed * dt };
       const next = resolveMove(this.position, delta, this.radius, colliders, houseBounds);

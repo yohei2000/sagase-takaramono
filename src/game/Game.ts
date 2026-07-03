@@ -195,7 +195,8 @@ export class Game {
   private updatePlaying(dt: number): void {
     this.elapsed += dt;
     this.updateCameraControls(dt);
-    this.player.update(dt, this.inputState(), this.cameraYaw, this.world.colliders, this.world.houseBounds);
+    this.updateCamera();
+    this.player.update(dt, this.inputState(), this.screenMovementBasis(), this.world.colliders, this.world.houseBounds);
     this.nearby = this.findNearby();
     this.world.setFocusedInteractable(this.nearby?.id ?? null);
     this.world.setTreasureGlowLevel(this.hints.length);
@@ -322,6 +323,30 @@ export class Game {
     const height = 9.6;
     this.camera.position.set(target.x - forward.x * distance, height, target.z - forward.z * distance);
     this.camera.lookAt(target.x, 1.1, target.z);
+  }
+
+  private screenMovementBasis(): { forward: Vec2; right: Vec2 } {
+    this.camera.updateMatrixWorld(true);
+
+    const screenRight3 = new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld, 0);
+    const screenUp3 = new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld, 1);
+    const right = new THREE.Vector2(screenRight3.x, screenRight3.z);
+    const forward = new THREE.Vector2(screenUp3.x, screenUp3.z);
+
+    if (right.lengthSq() < 0.0001) {
+      right.set(Math.cos(this.cameraYaw), -Math.sin(this.cameraYaw));
+    }
+    if (forward.lengthSq() < 0.0001) {
+      forward.set(Math.sin(this.cameraYaw), Math.cos(this.cameraYaw));
+    }
+
+    right.normalize();
+    forward.normalize();
+
+    return {
+      forward: { x: forward.x, z: forward.y },
+      right: { x: right.x, z: right.y }
+    };
   }
 
   private inputState(): InputState {
