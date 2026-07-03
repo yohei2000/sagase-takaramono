@@ -150,17 +150,15 @@ export class World {
     this.addWall(-17.1, 0, 0.32, 26.4, wallMaterial, 'そとのかべ');
     this.addWall(17.1, 0, 0.32, 26.4, wallMaterial, 'そとのかべ');
 
-    this.addWall(-11.4, 2.55, 10.6, 0.24, wallMaterial, 'へやのかべ');
-    this.addWall(11.4, 2.55, 10.6, 0.24, wallMaterial, 'へやのかべ');
+    this.addWall(-11.55, 2.55, 11.1, 0.24, wallMaterial, 'へやのかべ');
+    this.addWall(11.55, 2.55, 11.1, 0.24, wallMaterial, 'へやのかべ');
     this.addWall(-6, 2.3, 0.24, 2.6, wallMaterial, 'へやのかべ');
-    this.addWall(-6, 9.1, 0.24, 5.8, wallMaterial, 'へやのかべ');
+    this.addWall(-6, 9.65, 0.24, 7.1, wallMaterial, 'へやのかべ');
     this.addWall(6, 2.3, 0.24, 2.6, wallMaterial, 'へやのかべ');
-    this.addWall(6, 9.1, 0.24, 5.8, wallMaterial, 'へやのかべ');
-    this.addWall(10.4, 9.1, 0.24, 5.8, wallMaterial, 'へやのかべ');
-    this.addWall(0, -6.1, 0.24, 7.8, wallMaterial, 'へやのかべ');
-    this.addWall(0, 2.05, 0.24, 1.2, wallMaterial, 'へやのかべ');
-    this.addWall(-5.5, -9.5, 0.24, 5.4, wallMaterial, 'へやのかべ');
-    this.addWall(5.5, -9.5, 0.24, 5.4, wallMaterial, 'へやのかべ');
+    this.addWall(6, 9.65, 0.24, 7.1, wallMaterial, 'へやのかべ');
+    this.addWall(10.4, 9.65, 0.24, 7.1, wallMaterial, 'へやのかべ');
+    this.addWall(-5.5, -10, 0.24, 6.4, wallMaterial, 'へやのかべ');
+    this.addWall(5.5, -10, 0.24, 6.4, wallMaterial, 'へやのかべ');
 
     this.addRoomLabel('げんかん', -12.2, 10.3, '#fff4c6');
     this.addRoomLabel('リビング', -2.6, 10.4, '#dff7d4');
@@ -168,7 +166,7 @@ export class World {
     this.addRoomLabel('おふろ', 13.3, 10.4, '#d9f8ff');
     this.addRoomLabel('こどもべや', -6.5, -8.3, '#ffe1ec');
     this.addRoomLabel('あそびべや', 0, -8.4, '#e2f9d7');
-    this.addRoomLabel('ねしつ', 8.5, -8.4, '#ede4ff');
+    this.addRoomLabel('新室', 8.5, -8.4, '#ede4ff');
     this.addRoomLabel('そうこ', 0, -11.8, '#fff0c6');
   }
 
