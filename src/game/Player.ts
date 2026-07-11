@@ -33,10 +33,21 @@ export class Player {
   readonly group: THREE.Group;
   readonly radius = 0.32;
   private readonly speed = 4.2;
+  private readonly acceleration = 30;
+  private readonly deceleration = 36;
   private readonly bones: RigBones;
   private readonly skeleton: THREE.Skeleton;
+  private readonly velocity = new THREE.Vector2();
   private strideTime = 0;
+  private idleTime = 0;
   private moveBlend = 0;
+  private turnLean = 0;
+  private hairPitch = 0;
+  private hairPitchVelocity = 0;
+  private hairSplay = 0;
+  private hairSplayVelocity = 0;
+  private hairTurn = 0;
+  private hairTurnVelocity = 0;
 
   position: Vec2;
 
@@ -752,7 +763,7 @@ export class Player {
       ], [0.8, 0.8, 0.8]);
     }
 
-    this.animateRig(0, false);
+    this.animateRig(0);
     scene.add(this.group);
   }
 
@@ -763,62 +774,132 @@ export class Player {
     if (input.left) direction.x -= 1;
     if (input.right) direction.x += 1;
 
-    const moving = direction.lengthSq() > 0;
-    this.strideTime += dt * (moving ? 8.8 : 2.15);
-    this.moveBlend = THREE.MathUtils.lerp(this.moveBlend, moving ? 1 : 0, 1 - Math.exp(-dt * 9));
-
-    if (moving) {
+    const hasMoveInput = direction.lengthSq() > 0;
+    const desiredVelocity = new THREE.Vector2();
+    if (hasMoveInput) {
       direction.normalize();
       const forward = new THREE.Vector2(movementBasis.forward.x, movementBasis.forward.z);
       const right = new THREE.Vector2(movementBasis.right.x, movementBasis.right.z);
       const move = right.multiplyScalar(direction.x).add(forward.multiplyScalar(direction.y));
-      const delta = { x: move.x * this.speed * dt, z: move.y * this.speed * dt };
-      const next = resolveMove(this.position, delta, this.radius, colliders, houseBounds);
-      const movedX = next.x - this.position.x;
-      const movedZ = next.z - this.position.z;
-      this.position = next;
-      if (movedX * movedX + movedZ * movedZ > 0.0001) {
-        this.group.rotation.y = Math.atan2(movedX, movedZ);
-      }
+      desiredVelocity.copy(move).multiplyScalar(this.speed);
     }
 
-    this.animateRig(dt, moving);
+    const velocityChange = desiredVelocity.clone().sub(this.velocity);
+    const reversing = hasMoveInput && this.velocity.dot(desiredVelocity) < 0;
+    const response = hasMoveInput ? (reversing ? this.acceleration * 1.4 : this.acceleration) : this.deceleration;
+    const maxVelocityChange = response * dt;
+    if (velocityChange.length() > maxVelocityChange) {
+      velocityChange.setLength(maxVelocityChange);
+    }
+    this.velocity.add(velocityChange);
+    if (!hasMoveInput && this.velocity.lengthSq() < 0.0001) {
+      this.velocity.set(0, 0);
+    }
+
+    const attemptedDelta = { x: this.velocity.x * dt, z: this.velocity.y * dt };
+    const attemptedDistance = Math.hypot(attemptedDelta.x, attemptedDelta.z);
+    const next = resolveMove(this.position, attemptedDelta, this.radius, colliders, houseBounds);
+    const movedX = next.x - this.position.x;
+    const movedZ = next.z - this.position.z;
+    const movedDistance = Math.hypot(movedX, movedZ);
+    const collisionCorrection = movedDistance > attemptedDistance + 0.002;
+    const locomotionDistance = collisionCorrection ? 0 : movedDistance;
+    this.position = next;
+
+    if (dt > 0) {
+      // Keep momentum aligned with collision-resolved movement so walls do not cause foot sliding.
+      this.velocity.set(collisionCorrection ? 0 : movedX / dt, collisionCorrection ? 0 : movedZ / dt);
+    }
+
+    const actualSpeed = dt > 0 ? locomotionDistance / dt : 0;
+    const targetWalk = THREE.MathUtils.clamp(actualSpeed / this.speed, 0, 1);
+    const blendResponse = targetWalk > this.moveBlend ? 12 : 9;
+    this.moveBlend = THREE.MathUtils.damp(this.moveBlend, targetWalk, blendResponse, dt);
+    this.strideTime += locomotionDistance * 2.1;
+    this.idleTime += dt;
+
+    const facingX = locomotionDistance > 0.00001 ? movedX : desiredVelocity.x;
+    const facingZ = locomotionDistance > 0.00001 ? movedZ : desiredVelocity.y;
+    let turnLeanTarget = 0;
+    if (facingX * facingX + facingZ * facingZ > 0.000001) {
+      const targetYaw = Math.atan2(facingX, facingZ);
+      const yawDelta = Math.atan2(
+        Math.sin(targetYaw - this.group.rotation.y),
+        Math.cos(targetYaw - this.group.rotation.y)
+      );
+      turnLeanTarget = THREE.MathUtils.clamp(-yawDelta * 0.12 * targetWalk, -0.1, 0.1);
+      this.group.rotation.y += yawDelta * (1 - Math.exp(-14 * dt));
+    }
+    this.turnLean = THREE.MathUtils.damp(this.turnLean, turnLeanTarget, 10, dt);
+
+    this.animateRig(dt);
     this.group.position.set(this.position.x, 0, this.position.z);
   }
 
-  private animateRig(dt: number, moving: boolean): void {
-    const walk = this.moveBlend;
+  private animateRig(dt: number): void {
+    const walk = THREE.MathUtils.smoothstep(this.moveBlend, 0, 1);
     const idle = 1 - walk;
     const stride = Math.sin(this.strideTime);
-    const stepPeak = Math.abs(Math.cos(this.strideTime));
-    const idleWave = Math.sin(this.strideTime * 0.72);
-    const idleSway = Math.sin(this.strideTime * 0.48);
-    const lean = moving ? -0.06 : 0;
+    const stepPeak = 0.5 + 0.5 * Math.cos(this.strideTime * 2);
+    const idleWave = Math.sin(this.idleTime * 1.55);
+    const idleSway = Math.sin(this.idleTime * 0.82);
+    const lean = 0.055 * walk;
+    const leftKnee = smoothPositive(-stride);
+    const rightKnee = smoothPositive(stride);
 
-    this.bones.hips.position.y = 0.62 + stepPeak * 0.025 * walk + idleWave * 0.012 * idle;
-    this.bones.hips.rotation.set(lean, 0, idleSway * 0.025 * idle);
-    this.bones.spine.rotation.set(0.025 * idleWave * idle, 0, stride * 0.035 * walk);
-    this.bones.chest.rotation.set(0.02 * idleWave * idle, 0, -stride * 0.055 * walk);
-    this.bones.neck.rotation.set(-lean * 0.4, 0, 0);
-    this.bones.head.rotation.set(0.035 * idleWave * idle, 0.05 * idleSway * idle, -stride * 0.025 * walk);
+    this.bones.hips.position.x = -stride * 0.014 * walk;
+    this.bones.hips.position.y = 0.62 + stepPeak * 0.024 * walk + idleWave * 0.01 * idle;
+    this.bones.hips.rotation.set(0, -stride * 0.025 * walk, this.turnLean + idleSway * 0.02 * idle);
+    this.bones.spine.rotation.set(
+      lean * 0.65 + 0.02 * idleWave * idle,
+      stride * 0.025 * walk,
+      stride * 0.025 * walk
+    );
+    this.bones.chest.rotation.set(
+      lean * 0.35 + 0.016 * idleWave * idle,
+      stride * 0.045 * walk,
+      -this.turnLean * 0.55 - stride * 0.045 * walk
+    );
+    this.bones.neck.rotation.set(-lean * 0.32, -stride * 0.018 * walk, 0);
+    this.bones.head.rotation.set(
+      -lean * 0.28 + 0.03 * idleWave * idle,
+      0.045 * idleSway * idle,
+      -this.turnLean * 0.3 - stride * 0.018 * walk
+    );
 
     this.bones.leftUpperLeg.rotation.set(stride * 0.42 * walk, 0, -0.035);
     this.bones.rightUpperLeg.rotation.set(-stride * 0.42 * walk, 0, 0.035);
-    this.bones.leftLowerLeg.rotation.set(Math.max(0, -stride) * 0.56 * walk, 0, 0);
-    this.bones.rightLowerLeg.rotation.set(Math.max(0, stride) * 0.56 * walk, 0, 0);
-    this.bones.leftFoot.rotation.set(Math.max(0, stride) * -0.28 * walk, 0, 0.02);
-    this.bones.rightFoot.rotation.set(Math.max(0, -stride) * -0.28 * walk, 0, -0.02);
+    this.bones.leftLowerLeg.rotation.set(leftKnee * 0.58 * walk, 0, 0);
+    this.bones.rightLowerLeg.rotation.set(rightKnee * 0.58 * walk, 0, 0);
+    this.bones.leftFoot.rotation.set((-stride * 0.28 - leftKnee * 0.44) * walk, 0, 0.02);
+    this.bones.rightFoot.rotation.set((stride * 0.28 - rightKnee * 0.44) * walk, 0, -0.02);
 
-    this.bones.leftUpperArm.rotation.set(-0.12 - stride * 0.36 * walk, 0, -0.28 - idleSway * 0.03 * idle);
-    this.bones.rightUpperArm.rotation.set(-0.12 + stride * 0.36 * walk, 0, 0.28 + idleSway * 0.03 * idle);
-    this.bones.leftLowerArm.rotation.set(-0.22 + Math.max(0, stride) * 0.22 * walk, 0, -0.08);
-    this.bones.rightLowerArm.rotation.set(-0.22 + Math.max(0, -stride) * 0.22 * walk, 0, 0.08);
-    this.bones.leftHand.rotation.set(0, 0, -0.08 + Math.sin(this.strideTime * 1.6) * 0.04);
-    this.bones.rightHand.rotation.set(0, 0, 0.08 - Math.sin(this.strideTime * 1.6) * 0.04);
+    this.bones.leftUpperArm.rotation.set(-0.12 - stride * 0.38 * walk, 0, -0.28 - idleSway * 0.025 * idle);
+    this.bones.rightUpperArm.rotation.set(-0.12 + stride * 0.38 * walk, 0, 0.28 + idleSway * 0.025 * idle);
+    this.bones.leftLowerArm.rotation.set(-0.22 + rightKnee * 0.2 * walk, 0, -0.08);
+    this.bones.rightLowerArm.rotation.set(-0.22 + leftKnee * 0.2 * walk, 0, 0.08);
+    const handSwing = stride * 0.035 * walk + idleWave * 0.014 * idle;
+    this.bones.leftHand.rotation.set(0, 0, -0.08 + handSwing);
+    this.bones.rightHand.rotation.set(0, 0, 0.08 - handSwing);
 
-    const hairLag = Math.sin(this.strideTime - 0.5) * 0.12 * walk + idleWave * 0.045 * idle;
-    this.bones.leftPigtail.rotation.set(hairLag, 0, -0.12 + hairLag * 0.35);
-    this.bones.rightPigtail.rotation.set(hairLag, 0, 0.12 - hairLag * 0.35);
+    const hairPitchTarget = Math.sin(this.strideTime - 0.5) * 0.11 * walk + idleWave * 0.035 * idle;
+    const hairSplayTarget = Math.cos(this.strideTime * 2) * 0.035 * walk;
+    const hairTurnTarget = this.turnLean * 0.7;
+    const springSteps = Math.max(1, Math.ceil(dt * 120));
+    const springDt = dt / springSteps;
+    for (let step = 0; step < springSteps; step += 1) {
+      this.hairPitchVelocity += (hairPitchTarget - this.hairPitch) * 80 * springDt;
+      this.hairPitchVelocity *= Math.exp(-12 * springDt);
+      this.hairPitch += this.hairPitchVelocity * springDt;
+      this.hairSplayVelocity += (hairSplayTarget - this.hairSplay) * 70 * springDt;
+      this.hairSplayVelocity *= Math.exp(-11 * springDt);
+      this.hairSplay += this.hairSplayVelocity * springDt;
+      this.hairTurnVelocity += (hairTurnTarget - this.hairTurn) * 72 * springDt;
+      this.hairTurnVelocity *= Math.exp(-11 * springDt);
+      this.hairTurn += this.hairTurnVelocity * springDt;
+    }
+    this.bones.leftPigtail.rotation.set(this.hairPitch, 0, -0.12 + this.hairTurn + this.hairSplay);
+    this.bones.rightPigtail.rotation.set(this.hairPitch, 0, 0.12 + this.hairTurn - this.hairSplay);
 
     if (dt === 0) {
       this.bones.leftUpperLeg.rotation.x = 0;
@@ -827,4 +908,9 @@ export class Player {
       this.bones.rightLowerLeg.rotation.x = 0;
     }
   }
+}
+
+function smoothPositive(value: number): number {
+  const positive = THREE.MathUtils.clamp(value, 0, 1);
+  return positive * positive * (3 - 2 * positive);
 }
